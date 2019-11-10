@@ -14,7 +14,7 @@ import jade.lang.acl.MessageTemplate;
 
 public class DayTickerAgent extends Agent{
 
-	public static final int NUM_DAYS = 50;
+	public static final int NUM_DAYS = 100;
 	@Override
 	protected void setup() {
 		//add this agent to the yellow pages
