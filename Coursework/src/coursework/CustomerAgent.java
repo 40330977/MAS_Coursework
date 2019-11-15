@@ -16,7 +16,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 public class CustomerAgent extends Agent{
-	private ArrayList<AID> sellers = new ArrayList<>();
+	private AID seller;
 	private AID tickerAgent;
 	private int numQueriesSent;
 	
@@ -74,9 +74,9 @@ public class CustomerAgent extends Agent{
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
-					dailyActivity.addSubBehaviour(new FindSellers(myAgent));
-					dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
-					dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
+					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
+					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -90,6 +90,55 @@ public class CustomerAgent extends Agent{
 			}
 		}
 
+	}
+	
+	public class FindManufacturer extends OneShotBehaviour {
+
+		public FindManufacturer(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("manufacturer");
+			sellerTemplate.addServices(sd);
+			try{
+				//sellers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate); 
+				for(int i=0; i<agentsType1.length; i++){
+					seller=agentsType1[i].getName(); // this is the AID
+				}
+			}
+			catch(FIPAException e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
+	
+public class EndDay extends OneShotBehaviour {
+		
+		public EndDay(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.addReceiver(tickerAgent);
+			msg.setContent("done");
+			myAgent.send(msg);
+			//send a message to each seller that we have finished
+			ACLMessage sellerDone = new ACLMessage(ACLMessage.INFORM);
+			sellerDone.setContent("done");
+			//for(AID seller : sellers) {
+				sellerDone.addReceiver(seller);
+			
+			myAgent.send(sellerDone);
+			}
+		
 	}
 
 }
