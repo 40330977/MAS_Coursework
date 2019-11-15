@@ -14,9 +14,12 @@ public class Main {
 			ContainerController myContainer = myRuntime.createMainContainer(myProfile);	
 			AgentController rma = myContainer.createNewAgent("rma", "jade.tools.rma.rma", null);
 			rma.start();
-			
-			
-			
+			AgentController CustomerAgent = myContainer.createNewAgent("customer", CustomerAgent.class.getCanonicalName(),
+					null);
+			CustomerAgent.start();
+			AgentController ManufacturerAgent = myContainer.createNewAgent("manufacturer", ManufacturerAgent.class.getCanonicalName(),
+					null);
+			ManufacturerAgent.start();
 			AgentController tickerAgent = myContainer.createNewAgent("ticker", DayTickerAgent.class.getCanonicalName(),
 					null);
 			tickerAgent.start();

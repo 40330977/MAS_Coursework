@@ -2,6 +2,10 @@ package coursework;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import coursework.CustomerAgent.EndDay;
+import coursework.CustomerAgent.FindManufacturer;
+import coursework.CustomerAgent.TickerWaiter;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -15,20 +19,18 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-public class CustomerAgent extends Agent{
+public class ManufacturerAgent extends Agent{
 	private AID seller;
 	private AID tickerAgent;
 	private int numQueriesSent;
 	
-	private int budget = 50;
-	@Override
 	protected void setup() {
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("customer");
-		sd.setName(getLocalName() + "-customer-agent");
+		sd.setType("manufacturer");
+		sd.setName(getLocalName() + "-manufacturer-agent");
 		dfd.addServices(sd);
 		try{
 			DFService.register(this, dfd);
@@ -74,7 +76,7 @@ public class CustomerAgent extends Agent{
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
-					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					dailyActivity.addSubBehaviour(new FindCustomer(myAgent));
 					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
@@ -92,9 +94,9 @@ public class CustomerAgent extends Agent{
 
 	}
 	
-	public class FindManufacturer extends OneShotBehaviour {
+	public class FindCustomer extends OneShotBehaviour {
 
-		public FindManufacturer(Agent a) {
+		public FindCustomer(Agent a) {
 			super(a);
 		}
 
@@ -102,7 +104,7 @@ public class CustomerAgent extends Agent{
 		public void action() {
 			DFAgentDescription sellerTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
-			sd.setType("manufacturer");
+			sd.setType("customer");
 			sellerTemplate.addServices(sd);
 			try{
 				//sellers.clear();

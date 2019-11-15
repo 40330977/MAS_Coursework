@@ -99,6 +99,7 @@ public class DayTickerAgent extends Agent{
 				tick.setContent("new day");
 				for(AID id : simulationAgents) {
 					tick.addReceiver(id);
+					System.out.println("Sent Inform");
 				}
 				myAgent.send(tick);
 				step++;
@@ -110,8 +111,10 @@ public class DayTickerAgent extends Agent{
 				ACLMessage msg = myAgent.receive(mt);
 				if(msg != null) {
 					numFinReceived++;
-					if(numFinReceived >= simulationAgents.size()) {
+					System.out.println("Done recieved");
+					if(numFinReceived >= simulationAgents.size()-1) {
 						step++;
+						System.out.println("Increment step");
 					}
 				}
 				else {
