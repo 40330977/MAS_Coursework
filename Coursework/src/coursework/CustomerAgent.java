@@ -19,6 +19,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
+import ontologie.elements.CustomerOrder;
 
 public class CustomerAgent extends Agent{
 	private AID manufacturer;
@@ -126,6 +127,46 @@ public class CustomerAgent extends Agent{
 
 		}
 	}
+	
+public class GenerateOrder extends OneShotBehaviour{
+	public GenerateOrder(Agent a) {
+		super(a);
+	}
+	
+	@Override
+	public void action() {
+		CustomerOrder order = new CustomerOrder();
+		if(Math.random()<0.5) {
+			order.getScreen().setDisplaySize(5);
+			order.getScreen().setPrice(100);
+			order.getBattery().setBatteryLife(2000);
+			order.getBattery().setPrice(70);
+		}
+		else {
+			order.getScreen().setDisplaySize(7);
+			order.getScreen().setPrice(150);
+			order.getBattery().setBatteryLife(3000);
+			order.getBattery().setPrice(100);
+		}
+		if(Math.random()<0.5) {
+			order.getRam().setRAMSize(4);
+		}
+		else {
+			order.getRam().setRAMSize(8);
+		}
+		if(Math.random()<0.5) {
+			order.getStorage().setStorageSize(64);
+		}
+		else {
+			order.getStorage().setStorageSize(256);
+		}
+		order.setQuantity((int) Math.floor(1+50*Math.random()));
+		order.setUnitPrice((int) Math.floor(100+500*Math.random()));
+		order.setDueIn((int) Math.floor(1+10*Math.random()));
+		order.setLatePenalty(order.getQuantity()*(int) Math.floor(1+50*Math.random()));
+		
+	}
+}
 	
 public class EndDay extends OneShotBehaviour {
 		
