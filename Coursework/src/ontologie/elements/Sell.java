@@ -5,17 +5,17 @@ import jade.core.AID;
 
 public class Sell implements AgentAction{
 	private AID buyer;
-	private Item item;
+	private CustomerOrder item;
 	public AID getBuyer() {
 		return buyer;
 	}
 	public void setBuyer(AID buyer) {
 		this.buyer = buyer;
 	}
-	public Item getItem() {
+	public CustomerOrder getItem() {
 		return item;
 	}
-	public void setItem(Item item) {
+	public void setItem(CustomerOrder item) {
 		this.item = item;
 	}
 

@@ -30,6 +30,7 @@ public class ManufacturerAgent extends Agent{
 	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
+	private int productionCapacity = 50;
 	
 	protected void setup() {
 		getContentManager().registerLanguage(codec);

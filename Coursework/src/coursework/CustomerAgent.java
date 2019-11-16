@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -20,6 +23,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
 import ontologie.elements.CustomerOrder;
+import ontologie.elements.Sell;
 
 public class CustomerAgent extends Agent{
 	private AID manufacturer;
@@ -27,6 +31,7 @@ public class CustomerAgent extends Agent{
 	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
+	private boolean orderAccepted = false;
 	
 
 	@Override
@@ -165,6 +170,29 @@ public class GenerateOrder extends OneShotBehaviour{
 		order.setDueIn((int) Math.floor(1+10*Math.random()));
 		order.setLatePenalty(order.getQuantity()*(int) Math.floor(1+50*Math.random()));
 		
+		ACLMessage enquiry = new ACLMessage(ACLMessage.PROPOSE);
+		enquiry.setLanguage(codec.getName());
+		enquiry.setOntology(ontology.getName());
+		enquiry.addReceiver(manufacturer);
+		
+		Sell order1 = new Sell();
+		order1.setBuyer(myAgent.getAID());
+		order1.setItem(order);
+		
+		Action request = new Action();
+		request.setAction(order1);
+		request.setActor(manufacturer); // the agent that you request to perform the action
+		try {
+		 // Let JADE convert from Java objects to string
+		 getContentManager().fillContent(enquiry, request); //send the wrapper object
+		 send(enquiry);
+		}
+		catch (CodecException ce) {
+		 ce.printStackTrace();
+		}
+		catch (OntologyException oe) {
+		 oe.printStackTrace();
+		} 
 	}
 }
 	
