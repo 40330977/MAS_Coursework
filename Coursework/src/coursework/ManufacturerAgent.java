@@ -6,6 +6,9 @@ import java.util.HashMap;
 import coursework.CustomerAgent.EndDay;
 import coursework.CustomerAgent.FindManufacturer;
 import coursework.CustomerAgent.TickerWaiter;
+import jade.content.lang.Codec;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -18,13 +21,19 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import ontologie.Ontologie;
 
 public class ManufacturerAgent extends Agent{
-	private AID seller;
+	private ArrayList<AID> customers;
+	private ArrayList<AID> suppliers;
 	private AID tickerAgent;
 	private int numQueriesSent;
+	private Codec codec = new SLCodec();
+	private Ontology ontology = Ontologie.getInstance();
 	
 	protected void setup() {
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -77,6 +86,8 @@ public class ManufacturerAgent extends Agent{
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindCustomer(myAgent));
+					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
+					dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
 					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
@@ -109,8 +120,60 @@ public class ManufacturerAgent extends Agent{
 			try{
 				//sellers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate); 
-				for(int i=0; i<agentsType1.length; i++){
-					seller=agentsType1[i].getName(); // this is the AID
+				for(int i=0; i<agentsType1.length-1; i++){
+					customers.add(agentsType1[i].getName());
+				}
+			}
+			catch(FIPAException e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
+	
+	public class FindSupplier extends OneShotBehaviour {
+
+		public FindSupplier(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			DFAgentDescription supplierTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("supplier");
+			supplierTemplate.addServices(sd);
+			try{
+				//sellers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,supplierTemplate); 
+				for(int i=0; i<agentsType1.length-1; i++){
+					suppliers.add(agentsType1[i].getName());
+				}
+			}
+			catch(FIPAException e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
+	
+	public class FindCheapSupplier extends OneShotBehaviour {
+
+		public FindCheapSupplier(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			DFAgentDescription cheapsupTemplate = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription();
+			sd.setType("cheap supplier");
+			cheapsupTemplate.addServices(sd);
+			try{
+				//sellers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(myAgent,cheapsupTemplate); 
+				for(int i=0; i<agentsType1.length-1; i++){
+					suppliers.add(agentsType1[i].getName());
 				}
 			}
 			catch(FIPAException e) {

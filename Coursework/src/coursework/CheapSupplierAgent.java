@@ -23,8 +23,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
 
-
-public class SupplierAgent extends Agent{
+public class CheapSupplierAgent extends Agent{
 	private AID manufacturer;
 	private AID tickerAgent;
 	private int numQueriesSent;
@@ -40,8 +39,8 @@ public class SupplierAgent extends Agent{
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("supplier");
-		sd.setName(getLocalName() + "-supplier-agent");
+		sd.setType(" cheap supplier");
+		sd.setName(getLocalName() + "-cheap-supplier-agent");
 		dfd.addServices(sd);
 		try{
 			DFService.register(this, dfd);
@@ -154,6 +153,5 @@ public class EndDay extends OneShotBehaviour {
 			}
 		
 	}
-	
-	
+
 }

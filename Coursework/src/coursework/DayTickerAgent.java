@@ -31,7 +31,7 @@ public class DayTickerAgent extends Agent{
 			e.printStackTrace();
 		}
 		//wait for the other agents to start
-		doWait(5000);
+		doWait(50000);
 		addBehaviour(new SynchAgentsBehaviour(this));
 	}
 
@@ -76,7 +76,11 @@ public class DayTickerAgent extends Agent{
 				DFAgentDescription template3 = new DFAgentDescription();
 				ServiceDescription sd3 = new ServiceDescription();
 				sd2.setType("supplier");
-				template2.addServices(sd3);
+				template3.addServices(sd3);
+				DFAgentDescription template4 = new DFAgentDescription();
+				ServiceDescription sd4 = new ServiceDescription();
+				sd4.setType("cheap supplier");
+				template4.addServices(sd4);
 				try{
 					DFAgentDescription[] agentsType1  = DFService.search(myAgent,template1); 
 					for(int i=0; i<agentsType1.length; i++){
@@ -89,6 +93,10 @@ public class DayTickerAgent extends Agent{
 					DFAgentDescription[] agentsType3  = DFService.search(myAgent,template3); 
 					for(int i=0; i<agentsType3.length; i++){
 						simulationAgents.add(agentsType3[i].getName()); // this is the AID
+					}
+					DFAgentDescription[] agentsType4  = DFService.search(myAgent,template4); 
+					for(int i=0; i<agentsType4.length; i++){
+						simulationAgents.add(agentsType4[i].getName()); // this is the AID
 					}
 				}
 				catch(FIPAException e) {

@@ -2,6 +2,10 @@ package coursework;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import jade.content.lang.Codec;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -14,15 +18,20 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import ontologie.Ontologie;
 
 public class CustomerAgent extends Agent{
-	private AID seller;
+	private AID manufacturer;
 	private AID tickerAgent;
 	private int numQueriesSent;
+	private Codec codec = new SLCodec();
+	private Ontology ontology = Ontologie.getInstance();
 	
-	private int budget = 50;
+
 	@Override
 	protected void setup() {
+		getContentManager().registerLanguage(codec);
+		getContentManager().registerOntology(ontology);
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -108,7 +117,7 @@ public class CustomerAgent extends Agent{
 				//sellers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate); 
 				for(int i=0; i<agentsType1.length; i++){
-					seller=agentsType1[i].getName(); // this is the AID
+					manufacturer=agentsType1[i].getName(); // this is the AID
 				}
 			}
 			catch(FIPAException e) {
