@@ -32,6 +32,7 @@ public class CustomerAgent extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private boolean orderAccepted = false;
+	private CustomerOrder order = new CustomerOrder();
 	
 
 	@Override
@@ -90,7 +91,7 @@ public class CustomerAgent extends Agent{
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
-					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
+					dailyActivity.addSubBehaviour(new GenerateOrder(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -140,7 +141,7 @@ public class GenerateOrder extends OneShotBehaviour{
 	
 	@Override
 	public void action() {
-		CustomerOrder order = new CustomerOrder();
+		
 		if(Math.random()<0.5) {
 			order.getScreen().setDisplaySize(5);
 			order.getScreen().setPrice(100);
@@ -170,7 +171,7 @@ public class GenerateOrder extends OneShotBehaviour{
 		order.setDueIn((int) Math.floor(1+10*Math.random()));
 		order.setLatePenalty(order.getQuantity()*(int) Math.floor(1+50*Math.random()));
 		
-		ACLMessage enquiry = new ACLMessage(ACLMessage.PROPOSE);
+		ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
 		enquiry.setLanguage(codec.getName());
 		enquiry.setOntology(ontology.getName());
 		enquiry.addReceiver(manufacturer);
