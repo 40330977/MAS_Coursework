@@ -46,13 +46,12 @@ public class ManufacturerAgent extends Agent{
 	private AID cheapSupplier;
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
 	private HashMap<Integer, CustomerOrder> acceptedOrders = new HashMap();
-	private HashMap<Integer, Integer> buildSchedule = new HashMap();
+	private ArrayList<Integer> buildSchedule = new ArrayList();//orderno, day
 	private AID tickerAgent;
-	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private final int productionCapacity = 50;
-	private int dailyprod = 0;
+	private ArrayList<Integer> dailyprod = new ArrayList();//day, prod quota used
 	public Warehouse warehouse = new Warehouse();
 	private int OrderQuantity = 0;
 	private int day = 0;
@@ -74,8 +73,9 @@ public class ManufacturerAgent extends Agent{
 		catch(FIPAException e){
 			e.printStackTrace();
 		}
-
-
+		for(int i= 0; i<100; i++) {
+		dailyprod.add(i, 50);
+		}
 		
 		addBehaviour(new TickerWaiter(this));
 		addBehaviour(new OrderHandler());
@@ -279,7 +279,7 @@ public class ManufacturerAgent extends Agent{
 					recievedOrders.get(i).setFastTurnAround(true);
 					if(recievedOrders.get(i).getQuantity()>recievedOrders.get(i).getDueIn()*productionCapacity) {
 						recievedOrders.get(i).setAccepted(false);
-						continue;//mark accepted false
+						//continue;//mark accepted false
 					}
 					else {//can produce, must use expensive supplier
 						if(recievedOrders.get(i).getRam().getRAMSize()==4) {
@@ -300,10 +300,57 @@ public class ManufacturerAgent extends Agent{
 						}
 					}
 				}
+				else {
+					recievedOrders.get(i).setFastTurnAround(false);
+					if(recievedOrders.get(i).getQuantity()<(recievedOrders.get(i).getDueIn()-4)*productionCapacity) {//determine if possible to order from the cheap supplier
+						if(recievedOrders.get(i).getRam().getRAMSize()==4) {
+							recievedOrders.get(i).getRam().setPrice(20);
+						}
+						else {
+							recievedOrders.get(i).getRam().setPrice(35);
+						}
+						if(recievedOrders.get(i).getStorage().getStorageSize()==64) {
+							recievedOrders.get(i).getStorage().setPrice(15);
+						}
+						else {
+							recievedOrders.get(i).getStorage().setPrice(40);
+						}
+						recievedOrders.get(i).setNetCost(recievedOrders.get(i).getBattery().getPrice()+recievedOrders.get(i).getScreen().getPrice()+recievedOrders.get(i).getRam().getPrice()+recievedOrders.get(i).getStorage().getPrice());
+						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
+							recievedOrders.get(i).setAccepted(true);
+						}
+					}
+					else if(recievedOrders.get(i).getQuantity()<recievedOrders.get(i).getDueIn()*productionCapacity) {//if not but still able to produce same as case 1
+						if(recievedOrders.get(i).getRam().getRAMSize()==4) {
+							recievedOrders.get(i).getRam().setPrice(30);
+						}
+						else {
+							recievedOrders.get(i).getRam().setPrice(60);
+						}
+						if(recievedOrders.get(i).getStorage().getStorageSize()==64) {
+							recievedOrders.get(i).getStorage().setPrice(25);
+						}
+						else {
+							recievedOrders.get(i).getStorage().setPrice(50);
+						}
+						recievedOrders.get(i).setNetCost(recievedOrders.get(i).getBattery().getPrice()+recievedOrders.get(i).getScreen().getPrice()+recievedOrders.get(i).getRam().getPrice()+recievedOrders.get(i).getStorage().getPrice());
+						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
+							recievedOrders.get(i).setAccepted(true);
+						}
+					}
+					else {
+						recievedOrders.get(i).setAccepted(false);
+					}
+				}
 			}
 			for(int i = recievedOrders.size(); i> 0; i--) {//remove those not accepted
 				if(recievedOrders.get(i).isAccepted()==false) {
 					recievedOrders.remove(i);
+				}
+			}
+			if(recievedOrders.size()>1) {//maybe replace with scheduler
+				for(int i = 0; i<recievedOrders.size(); i++) {
+				
 				}
 			}
 		}
@@ -454,6 +501,8 @@ public class EndDay extends OneShotBehaviour {
 		@Override
 		public void action() {
 			recievedOrders.clear();
+			day++;
+
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
