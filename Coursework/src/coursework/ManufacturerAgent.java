@@ -39,14 +39,16 @@ import ontologie.elements.SupplierOrder;
 import ontologie.elements.*;
 
 public class ManufacturerAgent extends Agent{
-	private ArrayList<AID> customers;
-	private ArrayList<AID> suppliers;
+	private ArrayList<AID> customers = new ArrayList();
+	private ArrayList<AID> suppliers = new ArrayList();
+	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
+	private ArrayList<CustomerOrder> acceptedOrders = new ArrayList();
 	private AID tickerAgent;
 	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private int productionCapacity = 50;
-	Warehouse warehouse = new Warehouse();
+	private Warehouse warehouse = new Warehouse();
 	private int OrderQuantity = 0;
 	
 	protected void setup() {
@@ -69,6 +71,7 @@ public class ManufacturerAgent extends Agent{
 
 		
 		addBehaviour(new TickerWaiter(this));
+		addBehaviour(new OrderHandler());
 	}
 
 
@@ -106,7 +109,7 @@ public class ManufacturerAgent extends Agent{
 					dailyActivity.addSubBehaviour(new FindCustomer(myAgent));
 					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
-					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
+					
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -215,13 +218,15 @@ public class ManufacturerAgent extends Agent{
 					// Let JADE convert from String to Java objects
 					// Output will be a ContentElement
 					ce = getContentManager().extractContent(msg);
+					System.out.println(ce);
 					if(ce instanceof Action) {
 						Concept action = ((Action)ce).getAction();
-						if (action instanceof Sell) {
-							Sell order = (Sell)action;
-							CustomerOrder cust = order.getItem();
-							OrderQuantity = order.getItem().getQuantity();
-							System.out.println("test" + cust.getDueIn());
+						if (action instanceof CustomerOrder) {
+							CustomerOrder order = (CustomerOrder)action;
+							//CustomerOrder cust = order.getItem();
+							OrderQuantity = order.getQuantity();
+							System.out.println("test" + order.getDueIn());
+							recievedOrders.add(order);
 							//Item it = order.getItem();
 							// Extract the CD name and print it to demonstrate use of the ontology
 							//if(it instanceof CD){
