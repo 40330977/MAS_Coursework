@@ -181,6 +181,7 @@ public class GenerateOrder extends OneShotBehaviour{
 		order.setUnitPrice((int) Math.floor(100+500*Math.random()));
 		order.setDueIn((int) Math.floor(1+10*Math.random()));
 		order.setLatePenalty(order.getQuantity()*(int) Math.floor(1+50*Math.random()));
+		order.setAccepted(false);
 		
 		ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
 		enquiry.setLanguage(codec.getName());

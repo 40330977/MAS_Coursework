@@ -2,6 +2,8 @@ package coursework;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.function.Supplier;
 
 import coursework.CustomerAgent.EndDay;
 import coursework.CustomerAgent.FindManufacturer;
@@ -40,16 +42,21 @@ import ontologie.elements.*;
 
 public class ManufacturerAgent extends Agent{
 	private ArrayList<AID> customers = new ArrayList();
-	private ArrayList<AID> suppliers = new ArrayList();
+	private AID supplier;
+	private AID cheapSupplier;
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
-	private ArrayList<CustomerOrder> acceptedOrders = new ArrayList();
+	private HashMap<Integer, CustomerOrder> acceptedOrders = new HashMap();
+	private HashMap<Integer, Integer> buildSchedule = new HashMap();
 	private AID tickerAgent;
 	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
-	private int productionCapacity = 50;
-	private Warehouse warehouse = new Warehouse();
+	private final int productionCapacity = 50;
+	private int dailyprod = 0;
+	public Warehouse warehouse = new Warehouse();
 	private int OrderQuantity = 0;
+	private int day = 0;
+	private int orderNo = 0;
 	
 	protected void setup() {
 		getContentManager().registerLanguage(codec);
@@ -109,7 +116,7 @@ public class ManufacturerAgent extends Agent{
 					dailyActivity.addSubBehaviour(new FindCustomer(myAgent));
 					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
-					
+					doWait(5000);//wait to ensure all orders recieved
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -168,7 +175,7 @@ public class ManufacturerAgent extends Agent{
 				//sellers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,supplierTemplate); 
 				for(int i=0; i<agentsType1.length-1; i++){
-					suppliers.add(agentsType1[i].getName());
+					supplier = agentsType1[i].getName();
 				}
 			}
 			catch(FIPAException e) {
@@ -194,7 +201,7 @@ public class ManufacturerAgent extends Agent{
 				//sellers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,cheapsupTemplate); 
 				for(int i=0; i<agentsType1.length-1; i++){
-					suppliers.add(agentsType1[i].getName());
+					cheapSupplier = agentsType1[i].getName();
 				}
 			}
 			catch(FIPAException e) {
@@ -225,7 +232,7 @@ public class ManufacturerAgent extends Agent{
 							CustomerOrder order = (CustomerOrder)action;
 							//CustomerOrder cust = order.getItem();
 							OrderQuantity = order.getQuantity();
-							System.out.println("test" + order.getDueIn());
+							System.out.println("test: " + order.getQuantity()+" " + order.getDueIn()+" "+order.getGrossProfit());
 							recievedOrders.add(order);
 							//Item it = order.getItem();
 							// Extract the CD name and print it to demonstrate use of the ontology
@@ -260,8 +267,50 @@ public class ManufacturerAgent extends Agent{
 
 	}
 	
-	public class GenerateOrder extends OneShotBehaviour{
-		public GenerateOrder(Agent a) {
+	public class OrderDecider extends OneShotBehaviour{
+		public OrderDecider(Agent a) {
+			super(a);
+		}
+		
+		@Override
+		public void action() {
+			for(int i = 0; i<recievedOrders.size(); i++) {
+				if(recievedOrders.get(i).getDueIn()<4) {
+					recievedOrders.get(i).setFastTurnAround(true);
+					if(recievedOrders.get(i).getQuantity()>recievedOrders.get(i).getDueIn()*productionCapacity) {
+						recievedOrders.get(i).setAccepted(false);
+						continue;//mark accepted false
+					}
+					else {//can produce, must use expensive supplier
+						if(recievedOrders.get(i).getRam().getRAMSize()==4) {
+							recievedOrders.get(i).getRam().setPrice(30);
+						}
+						else {
+							recievedOrders.get(i).getRam().setPrice(60);
+						}
+						if(recievedOrders.get(i).getStorage().getStorageSize()==64) {
+							recievedOrders.get(i).getStorage().setPrice(25);
+						}
+						else {
+							recievedOrders.get(i).getStorage().setPrice(50);
+						}
+						recievedOrders.get(i).setNetCost(recievedOrders.get(i).getBattery().getPrice()+recievedOrders.get(i).getScreen().getPrice()+recievedOrders.get(i).getRam().getPrice()+recievedOrders.get(i).getStorage().getPrice());
+						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
+							recievedOrders.get(i).setAccepted(true);
+						}
+					}
+				}
+			}
+			for(int i = recievedOrders.size(); i> 0; i--) {//remove those not accepted
+				if(recievedOrders.get(i).isAccepted()==false) {
+					recievedOrders.remove(i);
+				}
+			}
+		}
+	}
+	
+	public class GenerateOrderSupplier extends OneShotBehaviour{
+		public GenerateOrderSupplier(Agent a) {
 			super(a);
 		}
 		
@@ -304,7 +353,7 @@ public class ManufacturerAgent extends Agent{
 			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
 			enquiry.setLanguage(codec.getName());
 			enquiry.setOntology(ontology.getName());
-			enquiry.addReceiver(suppliers.get(0));
+			enquiry.addReceiver(supplier);
 			
 			SupOrderAct order1 = new SupOrderAct();
 			order1.setBuyer(myAgent.getAID());
@@ -312,7 +361,75 @@ public class ManufacturerAgent extends Agent{
 			
 			Action request = new Action();
 			request.setAction(order1);
-			request.setActor(suppliers.get(0)); // the agent that you request to perform the action
+			request.setActor(supplier); // the agent that you request to perform the action
+			try {
+			 // Let JADE convert from Java objects to string
+			 getContentManager().fillContent(enquiry, request); //send the wrapper object
+			 
+			 send(enquiry);
+			}
+			catch (CodecException ce) {
+			 ce.printStackTrace();
+			}
+			catch (OntologyException oe) {
+			 oe.printStackTrace();
+			} 
+		}
+	}
+	
+	public class GenerateOrderCheap extends OneShotBehaviour{
+		public GenerateOrderCheap(Agent a) {
+			super(a);
+		}
+		
+		@Override
+		public void action() {
+			
+			SupplierOrder order = new SupplierOrder();
+			order.setScreen(new Screen());
+			order.setBattery(new Battery());
+			order.setRam(new RAM());
+			order.setStorage(new Storage());
+			
+			if(Math.random()<0.5) {
+				order.getScreen().setDisplaySize(5);
+				order.getScreen().setPrice(100);
+				order.getBattery().setBatteryLife(2000);
+				order.getBattery().setPrice(70);
+			}
+			else {
+				order.getScreen().setDisplaySize(7);
+				order.getScreen().setPrice(150);
+				order.getBattery().setBatteryLife(3000);
+				order.getBattery().setPrice(100);
+			}
+			if(Math.random()<0.5) {
+				order.getRam().setRAMSize(4);
+			}
+			else {
+				order.getRam().setRAMSize(8);
+			}
+			if(Math.random()<0.5) {
+				order.getStorage().setStorageSize(64);
+			}
+			else {
+				order.getStorage().setStorageSize(256);
+			}
+			order.setQuantity(OrderQuantity);
+			
+			
+			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
+			enquiry.setLanguage(codec.getName());
+			enquiry.setOntology(ontology.getName());
+			enquiry.addReceiver(cheapSupplier);
+			
+			SupOrderAct order1 = new SupOrderAct();
+			order1.setBuyer(myAgent.getAID());
+			order1.setItem(order);
+			
+			Action request = new Action();
+			request.setAction(order1);
+			request.setActor(cheapSupplier); // the agent that you request to perform the action
 			try {
 			 // Let JADE convert from Java objects to string
 			 getContentManager().fillContent(enquiry, request); //send the wrapper object
@@ -336,6 +453,7 @@ public class EndDay extends OneShotBehaviour {
 
 		@Override
 		public void action() {
+			recievedOrders.clear();
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");

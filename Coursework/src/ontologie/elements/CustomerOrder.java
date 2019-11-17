@@ -13,6 +13,10 @@ public class CustomerOrder implements AgentAction{
 	private int unitPrice;
 	private int dueIn;
 	private int latePenalty;
+	private boolean accepted;
+	private int netCost;
+	private boolean fastTurnAround;
+	
 	public AID getBuyer() {
 		return buyer;
 	}
@@ -66,6 +70,30 @@ public class CustomerOrder implements AgentAction{
 	}
 	public void setLatePenalty(int latePenalty) {
 		this.latePenalty = latePenalty;
+	}
+	public int getGrossProfit() {
+		return getQuantity()*getUnitPrice();
+	}
+	public boolean isAccepted() {
+		return accepted;
+	}
+	public void setAccepted(boolean accepted) {
+		this.accepted = accepted;
+	}
+	public int getNetCost() {
+		return netCost;
+	}
+	public void setNetCost(int netCost) {
+		this.netCost = netCost;
+	}
+	public int getNetProfit() {
+		return getGrossProfit() - getNetCost()*getQuantity();
+	}
+	public boolean isFastTurnAround() {
+		return fastTurnAround;
+	}
+	public void setFastTurnAround(boolean fastTurnAround) {
+		this.fastTurnAround = fastTurnAround;
 	}
 
 }
