@@ -5,17 +5,17 @@ import jade.core.AID;
 
 public class Owns implements Predicate{
 	private AID owner;
-	private Item item;
+	private CustomerOrder item;
 	public AID getOwner() {
 		return owner;
 	}
 	public void setOwner(AID owner) {
 		this.owner = owner;
 	}
-	public Item getItem() {
+	public CustomerOrder getItem() {
 		return item;
 	}
-	public void setItem(Item item) {
+	public void setItem(CustomerOrder item) {
 		this.item = item;
 	}
 

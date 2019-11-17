@@ -22,8 +22,13 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
+import ontologie.elements.Battery;
 import ontologie.elements.CustomerOrder;
+import ontologie.elements.RAM;
+import ontologie.elements.Screen;
 import ontologie.elements.Sell;
+import ontologie.elements.Storage;
+import ontologie.elements.*;
 
 public class CustomerAgent extends Agent{
 	private AID manufacturer;
@@ -32,7 +37,7 @@ public class CustomerAgent extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private boolean orderAccepted = false;
-	private CustomerOrder order = new CustomerOrder();
+	
 	
 
 	@Override
@@ -142,6 +147,12 @@ public class GenerateOrder extends OneShotBehaviour{
 	@Override
 	public void action() {
 		
+		CustomerOrder order = new CustomerOrder();
+		order.setScreen(new Screen());
+		order.setBattery(new Battery());
+		order.setRam(new RAM());
+		order.setStorage(new Storage());
+		
 		if(Math.random()<0.5) {
 			order.getScreen().setDisplaySize(5);
 			order.getScreen().setPrice(100);
@@ -176,16 +187,17 @@ public class GenerateOrder extends OneShotBehaviour{
 		enquiry.setOntology(ontology.getName());
 		enquiry.addReceiver(manufacturer);
 		
-		Sell order1 = new Sell();
-		order1.setBuyer(myAgent.getAID());
-		order1.setItem(order);
+		//Sell order1 = new Sell();
+		order.setBuyer(myAgent.getAID());
+		//order1.setItem(order);
 		
 		Action request = new Action();
-		request.setAction(order1);
+		request.setAction(order);
 		request.setActor(manufacturer); // the agent that you request to perform the action
 		try {
 		 // Let JADE convert from Java objects to string
 		 getContentManager().fillContent(enquiry, request); //send the wrapper object
+		 
 		 send(enquiry);
 		}
 		catch (CodecException ce) {

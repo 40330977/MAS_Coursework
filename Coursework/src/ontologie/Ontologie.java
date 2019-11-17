@@ -17,7 +17,7 @@ public class Ontologie extends BeanOntology{
 		private Ontologie(String name) {
 			super(name);
 			try {
-				add("Coursework.ontologie.elements");
+				add("ontologie.elements");
 			} catch (BeanOntologyException e) {
 				e.printStackTrace();
 			}
