@@ -56,6 +56,7 @@ public class ManufacturerAgent extends Agent{
 	private int OrderQuantity = 0;
 	private int day = 0;
 	private int orderNo = 0;
+	private HashMap<CustomerOrder, Integer> orderSchedule = new HashMap();
 	
 	protected void setup() {
 		getContentManager().registerLanguage(codec);
@@ -214,6 +215,7 @@ public class ManufacturerAgent extends Agent{
 	private class OrderHandler extends CyclicBehaviour{
 		@Override
 		public void action() {
+			recievedOrders.clear();
 			//This behaviour should only respond to REQUEST messages
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
 			ACLMessage msg = receive(mt);
@@ -354,6 +356,19 @@ public class ManufacturerAgent extends Agent{
 				}
 			}
 		}
+	}
+	
+	public class ScheduleManager extends OneShotBehaviour{
+		public ScheduleManager(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {//need to add unique order number to order
+			
+			
+		}
+		
 	}
 	
 	public class GenerateOrderSupplier extends OneShotBehaviour{
