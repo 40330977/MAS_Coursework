@@ -37,6 +37,7 @@ public class CustomerAgent extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private boolean orderAccepted = false;
+	private int orderNo = 0;
 	
 	
 
@@ -182,6 +183,8 @@ public class GenerateOrder extends OneShotBehaviour{
 		order.setDueIn((int) Math.floor(1+10*Math.random()));
 		order.setLatePenalty(order.getQuantity()*(int) Math.floor(1+50*Math.random()));
 		order.setAccepted(false);
+		order.setOrderID(myAgent.getAID().toString() + orderNo);
+		orderNo++;
 		
 		ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
 		enquiry.setLanguage(codec.getName());

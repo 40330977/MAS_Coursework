@@ -46,7 +46,7 @@ public class ManufacturerAgent extends Agent{
 	private AID cheapSupplier;
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
 	private HashMap<Integer, CustomerOrder> acceptedOrders = new HashMap();
-	private ArrayList<Integer> buildSchedule = new ArrayList();//orderno, day
+	
 	private AID tickerAgent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
@@ -57,10 +57,15 @@ public class ManufacturerAgent extends Agent{
 	private int day = 0;
 	private int orderNo = 0;
 	private HashMap<CustomerOrder, Integer> orderSchedule = new HashMap();
+	//private ArrayList<Integer> buildSchedule = new ArrayList();//index day, entry production days left
+	private CustomerOrder bestOrder;
 	
 	protected void setup() {
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
+		for(int i = 0; i<101; i++) {
+			dailyprod.add(productionCapacity);
+		}
 		//add this agent to the yellow pages
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -364,8 +369,19 @@ public class ManufacturerAgent extends Agent{
 		}
 
 		@Override
-		public void action() {//need to add unique order number to order
-			
+		public void action() {//need to add unique order number to order orderSchedule dailyProd
+			for(CustomerOrder order : recievedOrders) {
+				if(order.getNetProfit()>bestOrder.getNetProfit()) {
+					bestOrder = order;
+				}
+			}
+			if(bestOrder.isFastTurnAround()) {
+				if(bestOrder.getQuantity()<=dailyprod.get(day)) {
+					int remprod = dailyprod.get(day) - bestOrder.getQuantity();
+					dailyprod.set(day, remprod);
+					acceptedOrders.put(day, bestOrder);//ordersched switch + remove from recieved orders
+				}
+			}
 			
 		}
 		

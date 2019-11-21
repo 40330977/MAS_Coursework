@@ -16,6 +16,7 @@ public class CustomerOrder implements AgentAction{
 	private boolean accepted;
 	private int netCost;
 	private boolean fastTurnAround;
+	private String orderID;
 	
 	public AID getBuyer() {
 		return buyer;
@@ -94,6 +95,12 @@ public class CustomerOrder implements AgentAction{
 	}
 	public void setFastTurnAround(boolean fastTurnAround) {
 		this.fastTurnAround = fastTurnAround;
+	}
+	public String getOrderID() {
+		return orderID;
+	}
+	public void setOrderID(String orderID) {
+		this.orderID = orderID;
 	}
 
 }
