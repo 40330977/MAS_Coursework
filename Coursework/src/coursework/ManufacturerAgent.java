@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
-import coursework.CustomerAgent.EndDay;
-import coursework.CustomerAgent.FindManufacturer;
-import coursework.CustomerAgent.TickerWaiter;
+//import coursework.CustomerAgent.EndDay;
+//import coursework.CustomerAgent.FindManufacturer;
+//import coursework.CustomerAgent.TickerWaiter;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -519,7 +519,7 @@ public class ManufacturerAgent extends Agent{
 			order.setRam(new RAM());
 			order.setStorage(new Storage());
 
-			order.getRam().setRAMSize(Cust.getRam().getRAMSize());
+			//order.getRam().setRAMSize(Cust.getRam().getRAMSize());
 			
 			order.getStorage().setStorageSize(Cust.getStorage().getStorageSize());
 	
@@ -578,7 +578,7 @@ public class EndDay extends OneShotBehaviour {
 				//sellerDone.addReceiver(seller);
 			
 			//myAgent.send(sellerDone);
-			System.out.println("day over");
+			System.out.println("day over. " + day + " is new day");
 			}
 		
 	}

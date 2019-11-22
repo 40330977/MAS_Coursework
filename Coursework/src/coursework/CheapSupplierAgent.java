@@ -3,9 +3,9 @@ package coursework;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import coursework.CustomerAgent.EndDay;
-import coursework.CustomerAgent.FindManufacturer;
-import coursework.CustomerAgent.TickerWaiter;
+//import coursework.CustomerAgent.EndDay;
+//import coursework.CustomerAgent.FindManufacturer;
+//import coursework.CustomerAgent.TickerWaiter;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
