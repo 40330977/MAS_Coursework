@@ -45,7 +45,7 @@ public class ManufacturerAgent extends Agent{
 	private AID supplier;
 	private AID cheapSupplier;
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
-	private HashMap<Integer, CustomerOrder> acceptedOrders = new HashMap();
+	private HashMap<String, CustomerOrder> acceptedOrders = new HashMap();
 	
 	private AID tickerAgent;
 	private Codec codec = new SLCodec();
@@ -56,9 +56,11 @@ public class ManufacturerAgent extends Agent{
 	private int OrderQuantity = 0;
 	private int day = 0;
 	private int orderNo = 0;
-	private HashMap<CustomerOrder, Integer> orderSchedule = new HashMap();
-	//private ArrayList<Integer> buildSchedule = new ArrayList();//index day, entry production days left
+	private HashMap< Integer, CustomerOrder> orderSchedule = new HashMap();
+	private HashMap<Integer, CustomerOrder> orderScheduleCheap = new HashMap();
+	private ArrayList<Integer> buildSchedule = new ArrayList();//index day, entry production days left
 	private CustomerOrder bestOrder;
+	private CustomerOrder Cust;
 	
 	protected void setup() {
 		getContentManager().registerLanguage(codec);
@@ -123,7 +125,7 @@ public class ManufacturerAgent extends Agent{
 					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
 					doWait(5000);//wait to ensure all orders recieved
-					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
+					dailyActivity.addSubBehaviour(new ScheduleManager(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -370,26 +372,53 @@ public class ManufacturerAgent extends Agent{
 
 		@Override
 		public void action() {//need to add unique order number to order orderSchedule dailyProd
-			for(CustomerOrder order : recievedOrders) {
-				if(order.getNetProfit()>bestOrder.getNetProfit()) {
-					bestOrder = order;
+			while(recievedOrders.size()>0) {
+				for(CustomerOrder order : recievedOrders) {
+					if(order.getNetProfit()>bestOrder.getNetProfit()) {
+						bestOrder = order;
+					}
 				}
-			}
-			if(bestOrder.isFastTurnAround()) {
-				if(bestOrder.getQuantity()<=dailyprod.get(day)) {
-					int remprod = dailyprod.get(day) - bestOrder.getQuantity();
-					dailyprod.set(day, remprod);
-					acceptedOrders.put(day, bestOrder);//ordersched switch + remove from recieved orders
+				if(bestOrder.isFastTurnAround()) {
+					if(bestOrder.getQuantity()<=dailyprod.get(day+1)) {
+						int remprod = dailyprod.get(day+1) - bestOrder.getQuantity();//add build schedule
+						dailyprod.set(day + 1, remprod);
+						orderSchedule.put(day, bestOrder);//ordersched switch + remove from recieved orders
+						acceptedOrders.put(bestOrder.getOrderID(), bestOrder);
+						recievedOrders.remove(bestOrder);//message accepted
+					}//add else if to check next day and add if net profit is high enough also reject
 				}
-			}
+				if(!bestOrder.isFastTurnAround()) {
+					if(bestOrder.getQuantity()<=dailyprod.get(day + 4)) {
+						int remprod = dailyprod.get(day + 4)- bestOrder.getQuantity();
+						dailyprod.set(day + 4, remprod);
+						orderSchedule.put(day + 3, bestOrder);//ordersched switch + remove from recieved orders
+						orderScheduleCheap.put(day, bestOrder);
+						acceptedOrders.put(bestOrder.getOrderID(), bestOrder);
+						recievedOrders.remove(bestOrder);//message accepted
+					}
+				}
 			
+			}
 		}
 		
 	}
 	
-	public class GenerateOrderSupplier extends OneShotBehaviour{
-		public GenerateOrderSupplier(Agent a) {
+	public class OrderSender extends OneShotBehaviour{
+		public OrderSender(Agent a) {
 			super(a);
+		}
+
+		@Override
+		public void action() {
+			
+			
+		}
+	}
+	
+	public class GenerateOrderSupplier extends OneShotBehaviour{
+		public GenerateOrderSupplier(Agent a, CustomerOrder c) {
+			super(a);
+			Cust = c;
 		}
 		
 		@Override
@@ -401,31 +430,21 @@ public class ManufacturerAgent extends Agent{
 			order.setRam(new RAM());
 			order.setStorage(new Storage());
 			
-			if(Math.random()<0.5) {
-				order.getScreen().setDisplaySize(5);
-				order.getScreen().setPrice(100);
-				order.getBattery().setBatteryLife(2000);
-				order.getBattery().setPrice(70);
+			
+			order.getScreen().setDisplaySize(Cust.getScreen().getDisplaySize());
+			order.getScreen().setPrice(Cust.getScreen().getPrice());
+			order.getBattery().setBatteryLife(Cust.getBattery().getBatteryLife());
+			order.getBattery().setPrice(Cust.getBattery().getPrice());
+			
+			if(Cust.isFastTurnAround()) {
+				order.getRam().setRAMSize(Cust.getRam().getRAMSize());
+				order.getRam().setPrice(Cust.getRam().getPrice());
+				order.getStorage().setStorageSize(Cust.getStorage().getStorageSize());
+				order.getStorage().setPrice(Cust.getStorage().getPrice());
 			}
-			else {
-				order.getScreen().setDisplaySize(7);
-				order.getScreen().setPrice(150);
-				order.getBattery().setBatteryLife(3000);
-				order.getBattery().setPrice(100);
-			}
-			if(Math.random()<0.5) {
-				order.getRam().setRAMSize(4);
-			}
-			else {
-				order.getRam().setRAMSize(8);
-			}
-			if(Math.random()<0.5) {
-				order.getStorage().setStorageSize(64);
-			}
-			else {
-				order.getStorage().setStorageSize(256);
-			}
-			order.setQuantity(OrderQuantity);
+
+			order.setQuantity(Cust.getQuantity());
+			order.setBuyer(Cust.getBuyer());
 			
 			
 			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
@@ -456,8 +475,9 @@ public class ManufacturerAgent extends Agent{
 	}
 	
 	public class GenerateOrderCheap extends OneShotBehaviour{
-		public GenerateOrderCheap(Agent a) {
+		public GenerateOrderCheap(Agent a, CustomerOrder c) {
 			super(a);
+			Cust = c;
 		}
 		
 		@Override
@@ -468,32 +488,14 @@ public class ManufacturerAgent extends Agent{
 			order.setBattery(new Battery());
 			order.setRam(new RAM());
 			order.setStorage(new Storage());
+
+			order.getRam().setRAMSize(Cust.getRam().getRAMSize());
 			
-			if(Math.random()<0.5) {
-				order.getScreen().setDisplaySize(5);
-				order.getScreen().setPrice(100);
-				order.getBattery().setBatteryLife(2000);
-				order.getBattery().setPrice(70);
-			}
-			else {
-				order.getScreen().setDisplaySize(7);
-				order.getScreen().setPrice(150);
-				order.getBattery().setBatteryLife(3000);
-				order.getBattery().setPrice(100);
-			}
-			if(Math.random()<0.5) {
-				order.getRam().setRAMSize(4);
-			}
-			else {
-				order.getRam().setRAMSize(8);
-			}
-			if(Math.random()<0.5) {
-				order.getStorage().setStorageSize(64);
-			}
-			else {
-				order.getStorage().setStorageSize(256);
-			}
-			order.setQuantity(OrderQuantity);
+			order.getStorage().setStorageSize(Cust.getStorage().getStorageSize());
+	
+			order.setQuantity(Cust.getQuantity());
+			
+			order.setBuyer(Cust.getBuyer());
 			
 			
 			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
