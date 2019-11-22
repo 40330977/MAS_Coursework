@@ -14,6 +14,9 @@ import jade.lang.acl.MessageTemplate;
 
 public class DayTickerAgent extends Agent{
 
+	private AID supplier = new AID("supplier", AID.ISLOCALNAME);
+	private AID cheapSupplier = new AID("cheap supplier", AID.ISLOCALNAME);
+	private AID manufacturer = new AID("manufacturer", AID.ISLOCALNAME);
 	public static final int NUM_DAYS = 100;
 	@Override
 	protected void setup() {
@@ -73,31 +76,34 @@ public class DayTickerAgent extends Agent{
 				ServiceDescription sd2 = new ServiceDescription();
 				sd2.setType("customer");
 				template2.addServices(sd2);
-				DFAgentDescription template3 = new DFAgentDescription();
+				/*DFAgentDescription template3 = new DFAgentDescription();
 				ServiceDescription sd3 = new ServiceDescription();
 				sd2.setType("supplier");
 				template3.addServices(sd3);
 				DFAgentDescription template4 = new DFAgentDescription();
 				ServiceDescription sd4 = new ServiceDescription();
 				sd4.setType("cheap supplier");
-				template4.addServices(sd4);
+				template4.addServices(sd4);*/
 				try{
-					DFAgentDescription[] agentsType1  = DFService.search(myAgent,template1); 
+					/*DFAgentDescription[] agentsType1  = DFService.search(myAgent,template1); 
 					for(int i=0; i<agentsType1.length; i++){
 						simulationAgents.add(agentsType1[i].getName()); // this is the AID
-					}
+					}*/
 					DFAgentDescription[] agentsType2  = DFService.search(myAgent,template2); 
 					for(int i=0; i<agentsType2.length; i++){
 						simulationAgents.add(agentsType2[i].getName()); // this is the AID
 					}
-					DFAgentDescription[] agentsType3  = DFService.search(myAgent,template3); 
+					simulationAgents.add(cheapSupplier);
+					simulationAgents.add(supplier);
+					simulationAgents.add(manufacturer);
+					/*DFAgentDescription[] agentsType3  = DFService.search(myAgent,template3); 
 					for(int i=0; i<agentsType3.length; i++){
 						simulationAgents.add(agentsType3[i].getName()); // this is the AID
 					}
 					DFAgentDescription[] agentsType4  = DFService.search(myAgent,template4); 
 					for(int i=0; i<agentsType4.length; i++){
 						simulationAgents.add(agentsType4[i].getName()); // this is the AID
-					}
+					}*/
 				}
 				catch(FIPAException e) {
 					e.printStackTrace();
@@ -120,7 +126,7 @@ public class DayTickerAgent extends Agent{
 				if(msg != null) {
 					numFinReceived++;
 					System.out.println("Done recieved");
-					if(numFinReceived >= simulationAgents.size()-1) {
+					if(numFinReceived >= simulationAgents.size()) {
 						step++;
 						System.out.println("Increment step");
 					}

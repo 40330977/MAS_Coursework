@@ -3,6 +3,7 @@ package coursework;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+//import coursework.SupplierAgent.OrderHandler;
 //import coursework.CustomerAgent.EndDay;
 //import coursework.CustomerAgent.FindManufacturer;
 //import coursework.CustomerAgent.TickerWaiter;
@@ -59,7 +60,7 @@ public class CheapSupplierAgent extends Agent{
 
 		
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new OrderHandler());
+		//addBehaviour(new OrderHandler());
 	}
 
 
@@ -97,6 +98,7 @@ public class CheapSupplierAgent extends Agent{
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
+					dailyActivity.addSubBehaviour(new OrderHandler());
 					doWait(5000);
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);

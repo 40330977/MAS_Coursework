@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
+//import coursework.SupplierAgent.OrderHandler;
 //import coursework.CustomerAgent.EndDay;
 //import coursework.CustomerAgent.FindManufacturer;
 //import coursework.CustomerAgent.TickerWaiter;
@@ -47,7 +48,7 @@ public class ManufacturerAgent extends Agent{
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
 	private ArrayList<CustomerOrder> acceptedOrders = new ArrayList();
 	
-	private AID tickerAgent;
+	private AID tickerAgent= new AID("ticker", AID.ISLOCALNAME);
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private final int productionCapacity = 50;
@@ -89,7 +90,7 @@ public class ManufacturerAgent extends Agent{
 		}
 		
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new OrderHandler());
+		//addBehaviour(new OrderHandler());
 	}
 
 
@@ -129,10 +130,13 @@ public class ManufacturerAgent extends Agent{
 					//dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
 					doWait(5000);//wait to ensure all orders recieved
 					System.out.println("prints before scheduler");
+					dailyActivity.addSubBehaviour(new OrderHandler(myAgent));
+					doWait(5000);
+					if(recievedOrders!= null) {
 					dailyActivity.addSubBehaviour(new OrderDecider(myAgent));
 					dailyActivity.addSubBehaviour(new ScheduleManager(myAgent));
-					dailyActivity.addSubBehaviour(new OrderSender(myAgent));
-					doWait(500);//wait to ensure all orders recieved
+					dailyActivity.addSubBehaviour(new OrderSender(myAgent));}
+					doWait(5000);//wait to ensure all orders recieved
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -230,7 +234,11 @@ public class ManufacturerAgent extends Agent{
 		}
 	}
 	
-	private class OrderHandler extends CyclicBehaviour{
+	private class OrderHandler extends Behaviour{
+		Integer NumberOfOrders = 0;
+		public OrderHandler(Agent a) {
+			super(a);
+		}
 		@Override
 		public void action() {
 			//recievedOrders.clear();
@@ -254,6 +262,7 @@ public class ManufacturerAgent extends Agent{
 							OrderQuantity = order.getQuantity();
 							System.out.println("test: " + order.getQuantity()+" " + order.getDueIn()+" "+order.getGrossProfit());
 							recievedOrders.add(order);
+							NumberOfOrders++;
 							//Item it = order.getItem();
 							// Extract the CD name and print it to demonstrate use of the ontology
 							//if(it instanceof CD){
@@ -283,6 +292,12 @@ public class ManufacturerAgent extends Agent{
 			else{
 				block();
 			}
+		}
+
+		@Override
+		public boolean done() {
+			
+			return NumberOfOrders == customers.size();
 		}
 
 	}
@@ -519,7 +534,7 @@ public class ManufacturerAgent extends Agent{
 			order.setRam(new RAM());
 			order.setStorage(new Storage());
 
-			//order.getRam().setRAMSize(Cust.getRam().getRAMSize());
+			order.getRam().setRAMSize(Cust.getRam().getRAMSize());
 			
 			order.getStorage().setStorageSize(Cust.getStorage().getStorageSize());
 	

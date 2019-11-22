@@ -39,6 +39,7 @@ public class SupplierAgent extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private ArrayList<SupplierOrder> recievedOrders = new ArrayList();
+	private int day = 0;
 	
 
 	@Override
@@ -62,7 +63,7 @@ public class SupplierAgent extends Agent{
 
 		
 		addBehaviour(new TickerWaiter(this));
-		addBehaviour(new OrderHandler());
+		//addBehaviour(new OrderHandler());
 	}
 
 
@@ -95,13 +96,16 @@ public class SupplierAgent extends Agent{
 				}
 				if(msg.getContent().equals("new day")) {
 					//spawn new sequential behaviour for day's activities
-					SequentialBehaviour dailyActivity = new SequentialBehaviour();
+					//SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
-					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					//dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					day++;
+					System.out.println("supplier day: "+ day);
 					//dailyActivity.addSubBehaviour(new OrderHandler());
+					//doWait(5000);
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
-					dailyActivity.addSubBehaviour(new EndDay(myAgent));
-					myAgent.addBehaviour(dailyActivity);
+					//dailyActivity.addSubBehaviour(new EndDay(myAgent));
+					//myAgent.addBehaviour(dailyActivity);
 				}
 				else {
 					//termination message to end simulation
@@ -198,7 +202,7 @@ public class SupplierAgent extends Agent{
 
 	}
 	
-public class EndDay extends OneShotBehaviour {
+/*public class EndDay extends OneShotBehaviour {
 		
 		public EndDay(Agent a) {
 			super(a);
@@ -220,7 +224,7 @@ public class EndDay extends OneShotBehaviour {
 			System.out.println("day over");
 			}
 		
-	}
+	}*/
 	
 	
 }
