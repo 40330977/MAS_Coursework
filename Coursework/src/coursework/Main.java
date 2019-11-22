@@ -14,7 +14,7 @@ public class Main {
 			ContainerController myContainer = myRuntime.createMainContainer(myProfile);	
 			AgentController rma = myContainer.createNewAgent("rma", "jade.tools.rma.rma", null);
 			rma.start();
-			int numCustomers = 5;
+			int numCustomers = 1;
 			AgentController customers;
 			for(int i=0; i<numCustomers; i++) {
 				customers = myContainer.createNewAgent("customer" + i, CustomerAgent.class.getCanonicalName(), null);

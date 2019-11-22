@@ -6,9 +6,14 @@ import java.util.HashMap;
 import coursework.CustomerAgent.EndDay;
 import coursework.CustomerAgent.FindManufacturer;
 import coursework.CustomerAgent.TickerWaiter;
+import jade.content.Concept;
+import jade.content.ContentElement;
 import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -22,6 +27,8 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
+import ontologie.elements.CustomerOrder;
+import ontologie.elements.SupplierOrder;
 
 public class CheapSupplierAgent extends Agent{
 	private AID manufacturer;
@@ -29,7 +36,7 @@ public class CheapSupplierAgent extends Agent{
 	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
-	
+	private ArrayList<SupplierOrder> recievedOrders = new ArrayList();
 
 	@Override
 	protected void setup() {
@@ -39,7 +46,7 @@ public class CheapSupplierAgent extends Agent{
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType(" cheap supplier");
+		sd.setType("cheap supplier");
 		sd.setName(getLocalName() + "-cheap-supplier-agent");
 		dfd.addServices(sd);
 		try{
@@ -52,6 +59,7 @@ public class CheapSupplierAgent extends Agent{
 
 		
 		addBehaviour(new TickerWaiter(this));
+		addBehaviour(new OrderHandler());
 	}
 
 
@@ -89,6 +97,7 @@ public class CheapSupplierAgent extends Agent{
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
+					doWait(5000);
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -128,6 +137,63 @@ public class CheapSupplierAgent extends Agent{
 			}
 
 		}
+	}
+	
+	private class OrderHandler extends CyclicBehaviour{
+		@Override
+		public void action() {
+			//recievedOrders.clear();
+			//This behaviour should only respond to REQUEST messages
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
+			ACLMessage msg = receive(mt);
+			if(msg != null){
+				try {
+					ContentElement ce = null;
+					System.out.println(msg.getContent()); //print out the message content in SL
+
+					// Let JADE convert from String to Java objects
+					// Output will be a ContentElement
+					ce = getContentManager().extractContent(msg);
+					System.out.println(ce);
+					if(ce instanceof Action) {
+						Concept action = ((Action)ce).getAction();
+						if (action instanceof SupplierOrder) {
+							SupplierOrder order = (SupplierOrder)action;
+							//CustomerOrder cust = order.getItem();
+							//OrderQuantity = order.getQuantity();
+							System.out.println("cheap test: " + order.getQuantity());
+							recievedOrders.add(order);
+							//Item it = order.getItem();
+							// Extract the CD name and print it to demonstrate use of the ontology
+							//if(it instanceof CD){
+								//CD cd = (CD)it;
+								//check if seller has it in stock
+								//if(itemsForSale.containsKey(cd.getSerialNumber())) {
+									//System.out.println("Selling CD " + cd.getName());
+								//}
+								//else {
+									//System.out.println("You tried to order something out of stock!!!! Check first!");
+								//}
+
+							//}
+						}
+
+					}
+				}
+
+				catch (CodecException ce) {
+					ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+
+			}
+			else{
+				block();
+			}
+		}
+
 	}
 	
 public class EndDay extends OneShotBehaviour {

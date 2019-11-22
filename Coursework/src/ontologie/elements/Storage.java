@@ -5,7 +5,7 @@ import jade.content.onto.annotations.Slot;
 public class Storage extends Item{
 	private int storageSize;
 
-	@Slot(mandatory = true)
+	//@Slot(mandatory = true)
 	public int getStorageSize() {
 		return storageSize;
 	}

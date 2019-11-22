@@ -42,10 +42,10 @@ import ontologie.elements.*;
 
 public class ManufacturerAgent extends Agent{
 	private ArrayList<AID> customers = new ArrayList();
-	private AID supplier;
-	private AID cheapSupplier;
+	private AID supplier = new AID("supplier", AID.ISLOCALNAME);
+	private AID cheapSupplier = new AID("cheap supplier", AID.ISLOCALNAME);
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
-	private HashMap<String, CustomerOrder> acceptedOrders = new HashMap();
+	private ArrayList<CustomerOrder> acceptedOrders = new ArrayList();
 	
 	private AID tickerAgent;
 	private Codec codec = new SLCodec();
@@ -56,13 +56,16 @@ public class ManufacturerAgent extends Agent{
 	private int OrderQuantity = 0;
 	private int day = 0;
 	private int orderNo = 0;
-	private HashMap< Integer, CustomerOrder> orderSchedule = new HashMap();
-	private HashMap<Integer, CustomerOrder> orderScheduleCheap = new HashMap();
+	private HashMap<CustomerOrder, Integer> orderSchedule = new HashMap();
+	private HashMap<CustomerOrder, Integer> orderScheduleCheap = new HashMap();
 	private ArrayList<Integer> buildSchedule = new ArrayList();//index day, entry production days left
 	private CustomerOrder bestOrder;
 	private CustomerOrder Cust;
 	
 	protected void setup() {
+		System.out.println(supplier.toString());
+		System.out.println(cheapSupplier.toString());
+		bestOrder = new CustomerOrder();
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		for(int i = 0; i<101; i++) {
@@ -122,10 +125,14 @@ public class ManufacturerAgent extends Agent{
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindCustomer(myAgent));
-					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
-					dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
+					//dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
+					//dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
 					doWait(5000);//wait to ensure all orders recieved
+					System.out.println("prints before scheduler");
+					dailyActivity.addSubBehaviour(new OrderDecider(myAgent));
 					dailyActivity.addSubBehaviour(new ScheduleManager(myAgent));
+					dailyActivity.addSubBehaviour(new OrderSender(myAgent));
+					doWait(500);//wait to ensure all orders recieved
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -175,6 +182,7 @@ public class ManufacturerAgent extends Agent{
 
 		@Override
 		public void action() {
+			System.out.println("supplier finder test");
 			DFAgentDescription supplierTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("supplier");
@@ -184,6 +192,7 @@ public class ManufacturerAgent extends Agent{
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,supplierTemplate); 
 				for(int i=0; i<agentsType1.length-1; i++){
 					supplier = agentsType1[i].getName();
+					System.out.println(supplier.toString());
 				}
 			}
 			catch(FIPAException e) {
@@ -201,6 +210,7 @@ public class ManufacturerAgent extends Agent{
 
 		@Override
 		public void action() {
+			System.out.println("cheap supplier finder test");
 			DFAgentDescription cheapsupTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("cheap supplier");
@@ -210,6 +220,7 @@ public class ManufacturerAgent extends Agent{
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,cheapsupTemplate); 
 				for(int i=0; i<agentsType1.length-1; i++){
 					cheapSupplier = agentsType1[i].getName();
+					System.out.println(cheapSupplier.toString());
 				}
 			}
 			catch(FIPAException e) {
@@ -222,7 +233,7 @@ public class ManufacturerAgent extends Agent{
 	private class OrderHandler extends CyclicBehaviour{
 		@Override
 		public void action() {
-			recievedOrders.clear();
+			//recievedOrders.clear();
 			//This behaviour should only respond to REQUEST messages
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
 			ACLMessage msg = receive(mt);
@@ -283,11 +294,13 @@ public class ManufacturerAgent extends Agent{
 		
 		@Override
 		public void action() {
+			System.out.println("behaviour hit test");
 			for(int i = 0; i<recievedOrders.size(); i++) {
 				if(recievedOrders.get(i).getDueIn()<4) {
 					recievedOrders.get(i).setFastTurnAround(true);
 					if(recievedOrders.get(i).getQuantity()>recievedOrders.get(i).getDueIn()*productionCapacity) {
 						recievedOrders.get(i).setAccepted(false);
+						System.out.println("False to large an order");
 						//continue;//mark accepted false
 					}
 					else {//can produce, must use expensive supplier
@@ -306,6 +319,7 @@ public class ManufacturerAgent extends Agent{
 						recievedOrders.get(i).setNetCost(recievedOrders.get(i).getBattery().getPrice()+recievedOrders.get(i).getScreen().getPrice()+recievedOrders.get(i).getRam().getPrice()+recievedOrders.get(i).getStorage().getPrice());
 						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
 							recievedOrders.get(i).setAccepted(true);
+							System.out.println("True Fast Turn Around");
 						}
 					}
 				}
@@ -327,6 +341,7 @@ public class ManufacturerAgent extends Agent{
 						recievedOrders.get(i).setNetCost(recievedOrders.get(i).getBattery().getPrice()+recievedOrders.get(i).getScreen().getPrice()+recievedOrders.get(i).getRam().getPrice()+recievedOrders.get(i).getStorage().getPrice());
 						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
 							recievedOrders.get(i).setAccepted(true);
+							System.out.println("True cheap order");
 						}
 					}
 					else if(recievedOrders.get(i).getQuantity()<recievedOrders.get(i).getDueIn()*productionCapacity) {//if not but still able to produce same as case 1
@@ -345,23 +360,26 @@ public class ManufacturerAgent extends Agent{
 						recievedOrders.get(i).setNetCost(recievedOrders.get(i).getBattery().getPrice()+recievedOrders.get(i).getScreen().getPrice()+recievedOrders.get(i).getRam().getPrice()+recievedOrders.get(i).getStorage().getPrice());
 						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
 							recievedOrders.get(i).setAccepted(true);
+							System.out.println("True but like first case");
 						}
 					}
 					else {
 						recievedOrders.get(i).setAccepted(false);
+						System.out.println("False to large an order");
 					}
 				}
 			}
-			for(int i = recievedOrders.size(); i> 0; i--) {//remove those not accepted
+			if(recievedOrders.size()>0) {
+			for(int i = recievedOrders.size() - 1; i> 0; i--) {//remove those not accepted
 				if(recievedOrders.get(i).isAccepted()==false) {
 					recievedOrders.remove(i);
 				}
-			}
-			if(recievedOrders.size()>1) {//maybe replace with scheduler
-				for(int i = 0; i<recievedOrders.size(); i++) {
+			}}
+			//if(recievedOrders.size()>1) {//maybe replace with scheduler
+				//for(int i = 0; i<recievedOrders.size(); i++) {
 				
-				}
-			}
+				//}
+			//}
 		}
 	}
 	
@@ -372,7 +390,7 @@ public class ManufacturerAgent extends Agent{
 
 		@Override
 		public void action() {//need to add unique order number to order orderSchedule dailyProd
-			while(recievedOrders.size()>0) {
+			//while(recievedOrders.size()>0) {
 				for(CustomerOrder order : recievedOrders) {
 					if(order.getNetProfit()>bestOrder.getNetProfit()) {
 						bestOrder = order;
@@ -382,23 +400,25 @@ public class ManufacturerAgent extends Agent{
 					if(bestOrder.getQuantity()<=dailyprod.get(day+1)) {
 						int remprod = dailyprod.get(day+1) - bestOrder.getQuantity();//add build schedule
 						dailyprod.set(day + 1, remprod);
-						orderSchedule.put(day, bestOrder);//ordersched switch + remove from recieved orders
-						acceptedOrders.put(bestOrder.getOrderID(), bestOrder);
+						orderSchedule.put(bestOrder, day);//ordersched switch + remove from recieved orders
+						acceptedOrders.add(bestOrder);
 						recievedOrders.remove(bestOrder);//message accepted
+						System.out.println("Fast turn around sheduled");
 					}//add else if to check next day and add if net profit is high enough also reject
 				}
 				if(!bestOrder.isFastTurnAround()) {
 					if(bestOrder.getQuantity()<=dailyprod.get(day + 4)) {
 						int remprod = dailyprod.get(day + 4)- bestOrder.getQuantity();
 						dailyprod.set(day + 4, remprod);
-						orderSchedule.put(day + 3, bestOrder);//ordersched switch + remove from recieved orders
-						orderScheduleCheap.put(day, bestOrder);
-						acceptedOrders.put(bestOrder.getOrderID(), bestOrder);
+						orderSchedule.put(bestOrder, day + 3);//ordersched switch + remove from recieved orders
+						orderScheduleCheap.put(bestOrder, day);
+						acceptedOrders.add(bestOrder);
 						recievedOrders.remove(bestOrder);//message accepted
+						System.out.println("cheap turn around sheduled");
 					}
 				}
 			
-			}
+			//}
 		}
 		
 	}
@@ -410,7 +430,16 @@ public class ManufacturerAgent extends Agent{
 
 		@Override
 		public void action() {
-			
+			for(CustomerOrder order : acceptedOrders) {
+				if(orderSchedule.get(order) != null && orderSchedule.get(order) == day) {
+					System.out.println("Sending expensive");
+					myAgent.addBehaviour(new GenerateOrderSupplier(myAgent, order));
+				}
+				if(orderScheduleCheap.get(order) != null && orderScheduleCheap.get(order) == day) {
+					System.out.println("Sending cheap");
+					myAgent.addBehaviour(new GenerateOrderCheap(myAgent, order));
+				}
+			}
 			
 		}
 	}
@@ -444,7 +473,7 @@ public class ManufacturerAgent extends Agent{
 			}
 
 			order.setQuantity(Cust.getQuantity());
-			order.setBuyer(Cust.getBuyer());
+			//order.setBuyer(Cust.getBuyer());
 			
 			
 			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
@@ -452,18 +481,19 @@ public class ManufacturerAgent extends Agent{
 			enquiry.setOntology(ontology.getName());
 			enquiry.addReceiver(supplier);
 			
-			SupOrderAct order1 = new SupOrderAct();
+			/*SupOrderAct order1 = new SupOrderAct();
 			order1.setBuyer(myAgent.getAID());
-			order1.setItem(order);
+			order1.setItem(order);*/
 			
 			Action request = new Action();
-			request.setAction(order1);
+			request.setAction(order);
 			request.setActor(supplier); // the agent that you request to perform the action
 			try {
 			 // Let JADE convert from Java objects to string
 			 getContentManager().fillContent(enquiry, request); //send the wrapper object
 			 
 			 send(enquiry);
+			 System.out.println("Supplier Sent");
 			}
 			catch (CodecException ce) {
 			 ce.printStackTrace();
@@ -484,8 +514,8 @@ public class ManufacturerAgent extends Agent{
 		public void action() {
 			
 			SupplierOrder order = new SupplierOrder();
-			order.setScreen(new Screen());
-			order.setBattery(new Battery());
+			//order.setScreen(new Screen());
+			//order.setBattery(new Battery());
 			order.setRam(new RAM());
 			order.setStorage(new Storage());
 
@@ -495,7 +525,7 @@ public class ManufacturerAgent extends Agent{
 	
 			order.setQuantity(Cust.getQuantity());
 			
-			order.setBuyer(Cust.getBuyer());
+			//order.setBuyer(Cust.getBuyer());
 			
 			
 			ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
@@ -503,18 +533,19 @@ public class ManufacturerAgent extends Agent{
 			enquiry.setOntology(ontology.getName());
 			enquiry.addReceiver(cheapSupplier);
 			
-			SupOrderAct order1 = new SupOrderAct();
+			/*SupOrderAct order1 = new SupOrderAct();
 			order1.setBuyer(myAgent.getAID());
-			order1.setItem(order);
+			order1.setItem(order);*/
 			
 			Action request = new Action();
-			request.setAction(order1);
+			request.setAction(order);
 			request.setActor(cheapSupplier); // the agent that you request to perform the action
 			try {
 			 // Let JADE convert from Java objects to string
 			 getContentManager().fillContent(enquiry, request); //send the wrapper object
 			 
 			 send(enquiry);
+			 System.out.println("Cheap Supplier Sent");
 			}
 			catch (CodecException ce) {
 			 ce.printStackTrace();

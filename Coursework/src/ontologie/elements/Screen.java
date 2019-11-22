@@ -6,7 +6,7 @@ import jade.content.onto.annotations.Slot;
 public class Screen extends Item{
 	private int displaySize;
 
-	@Slot(mandatory = true)
+	//@Slot(mandatory = true)
 	public int getDisplaySize() {
 		return displaySize;
 	}

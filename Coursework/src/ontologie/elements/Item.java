@@ -6,7 +6,7 @@ import jade.content.onto.annotations.Slot;
 public class Item implements Concept{
 	private int price;
 	
-	@Slot(mandatory = true)
+	//@Slot(mandatory = true)
 	public int getPrice() 
 	{
 		return price;

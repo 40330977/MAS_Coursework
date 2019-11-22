@@ -4,18 +4,18 @@ import jade.content.AgentAction;
 import jade.core.AID;
 
 public class SupplierOrder implements AgentAction{
-	private AID buyer;
+	//private AID buyer;
 	private Screen screen;
 	private Battery battery;
 	private RAM ram;
 	private Storage storage;
 	private int quantity;
-	public AID getBuyer() {
+	/*public AID getBuyer() {
 		return buyer;
 	}
 	public void setBuyer(AID buyer) {
 		this.buyer = buyer;
-	}
+	}*/
 	public Screen getScreen() {
 		return screen;
 	}
