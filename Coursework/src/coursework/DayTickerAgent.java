@@ -14,7 +14,7 @@ import jade.lang.acl.MessageTemplate;
 
 public class DayTickerAgent extends Agent{
 
-	private AID supplier = new AID("supplier", AID.ISLOCALNAME);
+	private AID supplier = new AID("supplier1 ", AID.ISLOCALNAME);
 	private AID cheapSupplier = new AID("cheap supplier", AID.ISLOCALNAME);
 	private AID manufacturer = new AID("manufacturer", AID.ISLOCALNAME);
 	public static final int NUM_DAYS = 100;

@@ -97,6 +97,7 @@ public class CustomerAgent extends Agent{
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					doWait(8000);
 					dailyActivity.addSubBehaviour(new GenerateOrder(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
@@ -232,7 +233,7 @@ public class EndDay extends OneShotBehaviour {
 				//sellerDone.addReceiver(seller);
 			
 			//myAgent.send(sellerDone);
-			System.out.println("day over");
+			System.out.println("day over cust");
 			}
 		
 	}

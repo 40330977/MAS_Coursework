@@ -43,7 +43,7 @@ import ontologie.elements.*;
 
 public class ManufacturerAgent extends Agent{
 	private ArrayList<AID> customers = new ArrayList();
-	private AID supplier = new AID("supplier", AID.ISLOCALNAME);
+	private AID supplier = new AID("supplier1 ", AID.ISLOCALNAME);
 	private AID cheapSupplier = new AID("cheap supplier", AID.ISLOCALNAME);
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
 	private ArrayList<CustomerOrder> acceptedOrders = new ArrayList();
@@ -61,7 +61,9 @@ public class ManufacturerAgent extends Agent{
 	private HashMap<CustomerOrder, Integer> orderScheduleCheap = new HashMap();
 	private ArrayList<Integer> buildSchedule = new ArrayList();//index day, entry production days left
 	private CustomerOrder bestOrder;
-	private CustomerOrder Cust;
+	//private ArrayList<CustomerOrder> Cust;
+	private ArrayList<CustomerOrder> daysOrders = new ArrayList();
+	private ArrayList<CustomerOrder> daysCheapOrders = new ArrayList();
 	
 	protected void setup() {
 		System.out.println(supplier.toString());
@@ -135,7 +137,10 @@ public class ManufacturerAgent extends Agent{
 					if(recievedOrders!= null) {
 					dailyActivity.addSubBehaviour(new OrderDecider(myAgent));
 					dailyActivity.addSubBehaviour(new ScheduleManager(myAgent));
-					dailyActivity.addSubBehaviour(new OrderSender(myAgent));}
+					dailyActivity.addSubBehaviour(new OrderSender(myAgent));
+					dailyActivity.addSubBehaviour(new GenerateOrderSupplier(myAgent));
+					dailyActivity.addSubBehaviour(new GenerateOrderCheap(myAgent));
+					}
 					doWait(5000);//wait to ensure all orders recieved
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -296,8 +301,9 @@ public class ManufacturerAgent extends Agent{
 
 		@Override
 		public boolean done() {
-			
-			return NumberOfOrders == customers.size();
+			if(NumberOfOrders >= customers.size()-1) {
+			return true;}
+			else {return false;}
 		}
 
 	}
@@ -311,11 +317,12 @@ public class ManufacturerAgent extends Agent{
 		public void action() {
 			System.out.println("behaviour hit test");
 			for(int i = 0; i<recievedOrders.size(); i++) {
+				System.out.println("test!!!: " + recievedOrders.get(i).getRam().getRAMSize());
 				if(recievedOrders.get(i).getDueIn()<4) {
 					recievedOrders.get(i).setFastTurnAround(true);
 					if(recievedOrders.get(i).getQuantity()>recievedOrders.get(i).getDueIn()*productionCapacity) {
 						recievedOrders.get(i).setAccepted(false);
-						System.out.println("False to large an order");
+						System.out.println("False too large an order");
 						//continue;//mark accepted false
 					}
 					else {//can produce, must use expensive supplier
@@ -335,6 +342,10 @@ public class ManufacturerAgent extends Agent{
 						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
 							recievedOrders.get(i).setAccepted(true);
 							System.out.println("True Fast Turn Around");
+						}
+						else {
+							recievedOrders.get(i).setAccepted(false);
+							System.out.println("this may be breaking it");
 						}
 					}
 				}
@@ -448,26 +459,32 @@ public class ManufacturerAgent extends Agent{
 			for(CustomerOrder order : acceptedOrders) {
 				if(orderSchedule.get(order) != null && orderSchedule.get(order) == day) {
 					System.out.println("Sending expensive");
-					myAgent.addBehaviour(new GenerateOrderSupplier(myAgent, order));
+					//myAgent.addBehaviour(new GenerateOrderSupplier(myAgent, order));
+					daysOrders.add(order);
 				}
 				if(orderScheduleCheap.get(order) != null && orderScheduleCheap.get(order) == day) {
 					System.out.println("Sending cheap");
-					myAgent.addBehaviour(new GenerateOrderCheap(myAgent, order));
+					//myAgent.addBehaviour(new GenerateOrderCheap(myAgent, order));
+					daysCheapOrders.add(order);
 				}
 			}
+			
+			
+			
 			
 		}
 	}
 	
 	public class GenerateOrderSupplier extends OneShotBehaviour{
-		public GenerateOrderSupplier(Agent a, CustomerOrder c) {
+		public GenerateOrderSupplier(Agent a/*, ArrayList<CustomerOrder> c*/) {
 			super(a);
-			Cust = c;
+			//Cust = c;
 		}
 		
 		@Override
 		public void action() {
-			
+			if(daysOrders!=null) {
+			for(CustomerOrder Cust : daysOrders) {
 			SupplierOrder order = new SupplierOrder();
 			order.setScreen(new Screen());
 			order.setBattery(new Battery());
@@ -516,21 +533,25 @@ public class ManufacturerAgent extends Agent{
 			catch (OntologyException oe) {
 			 oe.printStackTrace();
 			} 
-		}
+			
+		}}}
 	}
 	
 	public class GenerateOrderCheap extends OneShotBehaviour{
-		public GenerateOrderCheap(Agent a, CustomerOrder c) {
+		public GenerateOrderCheap(Agent a/*, CustomerOrder c*/) {
 			super(a);
-			Cust = c;
+			//Cust = c;
 		}
 		
 		@Override
 		public void action() {
-			
+			if(daysCheapOrders!=null) {
+			for(CustomerOrder Cust : daysCheapOrders) {
+				Cust.getBattery();
 			SupplierOrder order = new SupplierOrder();
 			//order.setScreen(new Screen());
 			//order.setBattery(new Battery());
+			//System.out.println("cheap order pass check: " + Cust.getRam().getRAMSize());
 			order.setRam(new RAM());
 			order.setStorage(new Storage());
 
@@ -568,7 +589,8 @@ public class ManufacturerAgent extends Agent{
 			catch (OntologyException oe) {
 			 oe.printStackTrace();
 			} 
-		}
+			}
+		}}
 	}
 	
 public class EndDay extends OneShotBehaviour {
@@ -579,7 +601,69 @@ public class EndDay extends OneShotBehaviour {
 
 		@Override
 		public void action() {
+			OrderingFinished finisher = new OrderingFinished();
+			finisher.setFinisher("finish");
+			ACLMessage finish = new ACLMessage(ACLMessage.REQUEST);
+			finish.setLanguage(codec.getName());
+			finish.setOntology(ontology.getName());
+			finish.addReceiver(cheapSupplier);
+			Action request = new Action();
+			request.setAction(finisher);
+			request.setActor(cheapSupplier);
+			//try {
+			//finish.setContentObject(true);
+			finish.setConversationId("finished-ordering");
+			//finish.addReceiver(cheapSupplier);
+			//finish.addReceiver(supplier);
+			//finish.setContent("Finish");
+			try {
+				 // Let JADE convert from Java objects to string
+				 getContentManager().fillContent(finish, request); //send the wrapper object
+				 
+				 send(finish);
+				 System.out.println("finisher sent");
+				}
+				catch (CodecException ce) {
+				 ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+				 oe.printStackTrace();
+				} 
+			
+			OrderingFinished finisher1 = new OrderingFinished();
+			finisher1.setFinisher("finish");
+			ACLMessage finish1 = new ACLMessage(ACLMessage.REQUEST);
+			finish1.setLanguage(codec.getName());
+			finish1.setOntology(ontology.getName());
+			finish1.addReceiver(supplier);
+			Action request1 = new Action();
+			request1.setAction(finisher1);
+			request1.setActor(supplier);
+			System.out.println("finisher fuplier test: " + supplier.getName());
+			//try {
+			//finish.setContentObject(true);
+			finish1.setConversationId("finished-ordering1");
+			//finish1.addReceiver(cheapSupplier);
+			//finish1.addReceiver(supplier);
+			//finish.setContent("Finish");
+			try {
+				 // Let JADE convert from Java objects to string
+				 getContentManager().fillContent(finish1, request1); //send the wrapper object
+				 
+				 send(finish1);
+				 System.out.println("finisher1 sent");
+				}
+				catch (CodecException ce) {
+				 ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+				 oe.printStackTrace();
+				} 
+			
+			//myAgent.send(finish);
 			recievedOrders.clear();
+			daysOrders.clear();
+			daysCheapOrders.clear();
 			day++;
 
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);

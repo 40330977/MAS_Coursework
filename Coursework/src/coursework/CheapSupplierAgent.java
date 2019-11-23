@@ -29,6 +29,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
 import ontologie.elements.CustomerOrder;
+import ontologie.elements.OrderingFinished;
 import ontologie.elements.SupplierOrder;
 
 public class CheapSupplierAgent extends Agent{
@@ -38,6 +39,7 @@ public class CheapSupplierAgent extends Agent{
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private ArrayList<SupplierOrder> recievedOrders = new ArrayList();
+	private boolean orderReciever = false;
 
 	@Override
 	protected void setup() {
@@ -132,6 +134,7 @@ public class CheapSupplierAgent extends Agent{
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate); 
 				for(int i=0; i<agentsType1.length; i++){
 					manufacturer=agentsType1[i].getName(); // this is the AID
+					System.out.println("CFM test: " + manufacturer.getName());
 				}
 			}
 			catch(FIPAException e) {
@@ -141,7 +144,7 @@ public class CheapSupplierAgent extends Agent{
 		}
 	}
 	
-	private class OrderHandler extends CyclicBehaviour{
+	private class OrderHandler extends Behaviour{
 		@Override
 		public void action() {
 			//recievedOrders.clear();
@@ -149,6 +152,10 @@ public class CheapSupplierAgent extends Agent{
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
 			ACLMessage msg = receive(mt);
 			if(msg != null){
+				if(msg.getContent()=="finish") {
+					System.out.println("should be set done cheap");
+					orderReciever = true;}
+				else {
 				try {
 					ContentElement ce = null;
 					System.out.println(msg.getContent()); //print out the message content in SL
@@ -179,21 +186,34 @@ public class CheapSupplierAgent extends Agent{
 
 							//}
 						}
+						else if(action instanceof OrderingFinished) {
+							System.out.println("cheap supplier ordering finished for the day");
+							orderReciever = true;
+						}
+						
 
 					}
+					//deal with bool set here
+				
 				}
-
+				
 				catch (CodecException ce) {
 					ce.printStackTrace();
 				}
 				catch (OntologyException oe) {
 					oe.printStackTrace();
 				}
-
+				}
 			}
 			else{
 				block();
 			}
+		}
+
+		@Override
+		public boolean done() {
+			
+			return orderReciever;
 		}
 
 	}
@@ -206,6 +226,7 @@ public class EndDay extends OneShotBehaviour {
 
 		@Override
 		public void action() {
+			orderReciever = false;
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
@@ -217,7 +238,7 @@ public class EndDay extends OneShotBehaviour {
 				//sellerDone.addReceiver(seller);
 			
 			//myAgent.send(sellerDone);
-			System.out.println("day over");
+			System.out.println("day over cheap");
 			}
 		
 	}

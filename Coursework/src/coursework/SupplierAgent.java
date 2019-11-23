@@ -29,21 +29,23 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
 import ontologie.elements.CustomerOrder;
+import ontologie.elements.OrderingFinished;
 import ontologie.elements.SupplierOrder;
 
 
 public class SupplierAgent extends Agent{
-	private AID manufacturer;
+	private AID manufacturer = new AID("manufacturer", AID.ISLOCALNAME);
 	private AID tickerAgent;
 	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private ArrayList<SupplierOrder> recievedOrders = new ArrayList();
 	private int day = 0;
-	
+	private boolean orderReciever = false;
 
 	@Override
 	protected void setup() {
+		System.out.println("supplier test1");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		//add this agent to the yellow pages
@@ -90,21 +92,23 @@ public class SupplierAgent extends Agent{
 			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"),
 					MessageTemplate.MatchContent("terminate"));
 			ACLMessage msg = myAgent.receive(mt); 
+			
 			if(msg != null) {
 				if(tickerAgent == null) {
 					tickerAgent = msg.getSender();
 				}
 				if(msg.getContent().equals("new day")) {
 					//spawn new sequential behaviour for day's activities
-					//SequentialBehaviour dailyActivity = new SequentialBehaviour();
+					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					//dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
-					day++;
-					System.out.println("supplier day: "+ day);
-					//dailyActivity.addSubBehaviour(new OrderHandler());
-					//doWait(5000);
+					System.out.println("Supplier Agent is a bawbag!" + manufacturer.getName() + manufacturer.getLocalName());
+					//day++;
+					//System.out.println("supplier day: "+ day);
+					dailyActivity.addSubBehaviour(new OrderHandler());
+					doWait(5000);
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
-					//dailyActivity.addSubBehaviour(new EndDay(myAgent));
+					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					//myAgent.addBehaviour(dailyActivity);
 				}
 				else {
@@ -131,11 +135,13 @@ public class SupplierAgent extends Agent{
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("manufacturer");
 			sellerTemplate.addServices(sd);
+			//System.out.println("Supplier Agent is a bawbag!");
 			try{
 				//sellers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate); 
 				for(int i=0; i<agentsType1.length; i++){
 					manufacturer=agentsType1[i].getName(); // this is the AID
+					System.out.println("FM test: " + manufacturer.getName());
 				}
 			}
 			catch(FIPAException e) {
@@ -145,7 +151,7 @@ public class SupplierAgent extends Agent{
 		}
 	}
 	
-	private class OrderHandler extends CyclicBehaviour{
+	private class OrderHandler extends Behaviour{
 		@Override
 		public void action() {
 			//recievedOrders.clear();
@@ -153,6 +159,10 @@ public class SupplierAgent extends Agent{
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
 			ACLMessage msg = receive(mt);
 			if(msg != null){
+				if(msg.getContent() == "finish") {
+					System.out.println("should be set done cheap");
+					orderReciever = true;}
+				else {
 				try {
 					ContentElement ce = null;
 					System.out.println(msg.getContent()); //print out the message content in SL
@@ -183,8 +193,13 @@ public class SupplierAgent extends Agent{
 
 							//}
 						}
+						else if(action instanceof OrderingFinished) {
+							System.out.println("supplier ordering finished for the day");
+							orderReciever = true;
+						}
 
 					}
+					
 				}
 
 				catch (CodecException ce) {
@@ -193,16 +208,21 @@ public class SupplierAgent extends Agent{
 				catch (OntologyException oe) {
 					oe.printStackTrace();
 				}
-
+				}
 			}
 			else{
 				block();
 			}
 		}
 
+		@Override
+		public boolean done() {
+			return orderReciever;
+		}
+
 	}
 	
-/*public class EndDay extends OneShotBehaviour {
+public class EndDay extends OneShotBehaviour {
 		
 		public EndDay(Agent a) {
 			super(a);
@@ -210,6 +230,7 @@ public class SupplierAgent extends Agent{
 
 		@Override
 		public void action() {
+			orderReciever = false;
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
@@ -221,10 +242,10 @@ public class SupplierAgent extends Agent{
 				//sellerDone.addReceiver(seller);
 			
 			//myAgent.send(sellerDone);
-			System.out.println("day over");
+			System.out.println("day over sup");
 			}
 		
-	}*/
+	}
 	
 	
 }

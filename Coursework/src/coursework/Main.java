@@ -26,7 +26,7 @@ public class Main {
 			AgentController ManufacturerAgent = myContainer.createNewAgent("manufacturer", ManufacturerAgent.class.getCanonicalName(),
 					null);
 			ManufacturerAgent.start();
-			AgentController SupplierAgent = myContainer.createNewAgent("supplier", SupplierAgent.class.getCanonicalName(),
+			AgentController SupplierAgent = myContainer.createNewAgent("supplier1 ", SupplierAgent.class.getCanonicalName(),
 					null);
 			SupplierAgent.start();
 			AgentController CheapSupplierAgent = myContainer.createNewAgent("cheap supplier", CheapSupplierAgent.class.getCanonicalName(),
