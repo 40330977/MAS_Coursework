@@ -97,7 +97,7 @@ public class CustomerAgent extends Agent{
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
-					doWait(8000);
+					doWait(1000);
 					dailyActivity.addSubBehaviour(new GenerateOrder(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
@@ -132,6 +132,7 @@ public class CustomerAgent extends Agent{
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate); 
 				for(int i=0; i<agentsType1.length; i++){
 					manufacturer=agentsType1[i].getName(); // this is the AID
+					System.out.println(manufacturer);
 				}
 			}
 			catch(FIPAException e) {
@@ -204,6 +205,7 @@ public class GenerateOrder extends OneShotBehaviour{
 		 getContentManager().fillContent(enquiry, request); //send the wrapper object
 		 
 		 send(enquiry);
+		 System.out.println("customer order sent");
 		}
 		catch (CodecException ce) {
 		 ce.printStackTrace();

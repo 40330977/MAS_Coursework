@@ -97,7 +97,7 @@ public class CheapSupplierAgent extends Agent{
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
-					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					//dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new OrderHandler());
@@ -152,10 +152,7 @@ public class CheapSupplierAgent extends Agent{
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
 			ACLMessage msg = receive(mt);
 			if(msg != null){
-				if(msg.getContent()=="finish") {
-					System.out.println("should be set done cheap");
-					orderReciever = true;}
-				else {
+				
 				try {
 					ContentElement ce = null;
 					System.out.println(msg.getContent()); //print out the message content in SL
@@ -170,26 +167,14 @@ public class CheapSupplierAgent extends Agent{
 							SupplierOrder order = (SupplierOrder)action;
 							//CustomerOrder cust = order.getItem();
 							//OrderQuantity = order.getQuantity();
+							if(!order.isFinishOrder()) {
 							System.out.println("cheap test: " + order.getQuantity());
 							recievedOrders.add(order);
-							//Item it = order.getItem();
-							// Extract the CD name and print it to demonstrate use of the ontology
-							//if(it instanceof CD){
-								//CD cd = (CD)it;
-								//check if seller has it in stock
-								//if(itemsForSale.containsKey(cd.getSerialNumber())) {
-									//System.out.println("Selling CD " + cd.getName());
-								//}
-								//else {
-									//System.out.println("You tried to order something out of stock!!!! Check first!");
-								//}
-
-							//}
+							}
+							else {orderReciever = true;}
+							
 						}
-						else if(action instanceof OrderingFinished) {
-							System.out.println("cheap supplier ordering finished for the day");
-							orderReciever = true;
-						}
+						
 						
 
 					}
@@ -203,7 +188,7 @@ public class CheapSupplierAgent extends Agent{
 				catch (OntologyException oe) {
 					oe.printStackTrace();
 				}
-				}
+				
 			}
 			else{
 				block();

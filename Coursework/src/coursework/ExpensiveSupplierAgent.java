@@ -1,12 +1,14 @@
 package coursework;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-//import coursework.SupplierAgent.OrderHandler;
-//import coursework.CustomerAgent.EndDay;
-//import coursework.CustomerAgent.FindManufacturer;
-//import coursework.CustomerAgent.TickerWaiter;
+//import coursework.CheapSupplierAgent.EndDay;
+//import coursework.CheapSupplierAgent.OrderHandler;
+//import coursework.CheapSupplierAgent.TickerWaiter;
+//import coursework.CheapSupplierAgent.EndDay;
+//import coursework.CheapSupplierAgent.FindManufacturer;
+//import coursework.CheapSupplierAgent.OrderHandler;
+//import coursework.CheapSupplierAgent.TickerWaiter;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -28,24 +30,20 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import ontologie.Ontologie;
-import ontologie.elements.CustomerOrder;
 import ontologie.elements.OrderingFinished;
 import ontologie.elements.SupplierOrder;
 
-
-public class SupplierAgent extends Agent{
-	private AID manufacturer /*= new AID("manufacturer", AID.ISLOCALNAME)*/;
+public class ExpensiveSupplierAgent extends Agent{
+	private AID manufacturer;
 	private AID tickerAgent;
 	private int numQueriesSent;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private ArrayList<SupplierOrder> recievedOrders = new ArrayList();
-	private int day = 0;
 	private boolean orderReciever = false;
 
 	@Override
 	protected void setup() {
-		System.out.println("supplier test1");
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
 		//add this agent to the yellow pages
@@ -92,7 +90,6 @@ public class SupplierAgent extends Agent{
 			MessageTemplate mt = MessageTemplate.or(MessageTemplate.MatchContent("new day"),
 					MessageTemplate.MatchContent("terminate"));
 			ACLMessage msg = myAgent.receive(mt); 
-			
 			if(msg != null) {
 				if(tickerAgent == null) {
 					tickerAgent = msg.getSender();
@@ -102,15 +99,12 @@ public class SupplierAgent extends Agent{
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					//dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
-					//System.out.println("Supplier Agent is a bawbag!");
-					//System.out.println("Supplier Agent is a bawbag!" + manufacturer.getName());
-					//day++;
-					//System.out.println("supplier day: "+ day);
+					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
+					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new OrderHandler());
 					doWait(5000);
-					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
-					//myAgent.addBehaviour(dailyActivity);
+					myAgent.addBehaviour(dailyActivity);
 				}
 				else {
 					//termination message to end simulation
@@ -154,13 +148,12 @@ public class SupplierAgent extends Agent{
 	private class OrderHandler extends Behaviour{
 		@Override
 		public void action() {
-			System.out.println("Supplier Order Handler Test 1");
 			//recievedOrders.clear();
 			//This behaviour should only respond to REQUEST messages
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
 			ACLMessage msg = receive(mt);
 			if(msg != null){
-				System.out.println("Supplier Order Handler Test " + msg.toString() );
+				
 				try {
 					ContentElement ce = null;
 					System.out.println(msg.getContent()); //print out the message content in SL
@@ -176,7 +169,7 @@ public class SupplierAgent extends Agent{
 							//CustomerOrder cust = order.getItem();
 							//OrderQuantity = order.getQuantity();
 							if(!order.isFinishOrder()) {
-							System.out.println("test: " + order.getQuantity());
+							System.out.println("exp test: " + order.getQuantity());
 							recievedOrders.add(order);}
 							else {orderReciever = true;}
 							//Item it = order.getItem();
@@ -193,15 +186,14 @@ public class SupplierAgent extends Agent{
 
 							//}
 						}
-						/*else if(action instanceof OrderingFinished) {
-							System.out.println("supplier ordering finished for the day");
-							orderReciever = true;
-						}*/
+						
+						
 
 					}
-					
+					//deal with bool set here
+				
 				}
-
+				
 				catch (CodecException ce) {
 					ce.printStackTrace();
 				}
@@ -217,6 +209,7 @@ public class SupplierAgent extends Agent{
 
 		@Override
 		public boolean done() {
+			
 			return orderReciever;
 		}
 
@@ -242,10 +235,9 @@ public class EndDay extends OneShotBehaviour {
 				//sellerDone.addReceiver(seller);
 			
 			//myAgent.send(sellerDone);
-			System.out.println("day over sup");
+			System.out.println("day over exp");
 			}
 		
 	}
-	
-	
+
 }

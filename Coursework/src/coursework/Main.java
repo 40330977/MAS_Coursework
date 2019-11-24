@@ -23,10 +23,13 @@ public class Main {
 			/*AgentController CustomerAgent = myContainer.createNewAgent("customer", CustomerAgent.class.getCanonicalName(),
 					null);
 			CustomerAgent.start();*/
-			AgentController ManufacturerAgent = myContainer.createNewAgent("manufacturer", ManufacturerAgent.class.getCanonicalName(),
+			AgentController ManufacturerAgent = myContainer.createNewAgent("manufacturer 1", ManufacturerAgent.class.getCanonicalName(),
 					null);
 			ManufacturerAgent.start();
-			AgentController SupplierAgent = myContainer.createNewAgent("supplier1 ", SupplierAgent.class.getCanonicalName(),
+			/*AgentController SupplierAgent = myContainer.createNewAgent("supplier 1", SupplierAgent.class.getCanonicalName(),
+					null);
+			SupplierAgent.start();*/
+			AgentController SupplierAgent = myContainer.createNewAgent("supplier 1", ExpensiveSupplierAgent.class.getCanonicalName(),
 					null);
 			SupplierAgent.start();
 			AgentController CheapSupplierAgent = myContainer.createNewAgent("cheap supplier", CheapSupplierAgent.class.getCanonicalName(),

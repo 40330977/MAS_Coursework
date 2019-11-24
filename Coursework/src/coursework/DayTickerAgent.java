@@ -14,9 +14,9 @@ import jade.lang.acl.MessageTemplate;
 
 public class DayTickerAgent extends Agent{
 
-	private AID supplier = new AID("supplier1 ", AID.ISLOCALNAME);
+	private AID supplier = new AID("supplier 1", AID.ISLOCALNAME);
 	private AID cheapSupplier = new AID("cheap supplier", AID.ISLOCALNAME);
-	private AID manufacturer = new AID("manufacturer", AID.ISLOCALNAME);
+	//private AID manufacturer /*= new AID("manufacturer", AID.ISLOCALNAME)*/;
 	public static final int NUM_DAYS = 100;
 	@Override
 	protected void setup() {
@@ -85,17 +85,17 @@ public class DayTickerAgent extends Agent{
 				sd4.setType("cheap supplier");
 				template4.addServices(sd4);*/
 				try{
-					/*DFAgentDescription[] agentsType1  = DFService.search(myAgent,template1); 
+					DFAgentDescription[] agentsType1  = DFService.search(myAgent,template1); 
 					for(int i=0; i<agentsType1.length; i++){
 						simulationAgents.add(agentsType1[i].getName()); // this is the AID
-					}*/
+					}
 					DFAgentDescription[] agentsType2  = DFService.search(myAgent,template2); 
 					for(int i=0; i<agentsType2.length; i++){
 						simulationAgents.add(agentsType2[i].getName()); // this is the AID
 					}
 					simulationAgents.add(cheapSupplier);
 					simulationAgents.add(supplier);
-					simulationAgents.add(manufacturer);
+					//simulationAgents.add(manufacturer);
 					/*DFAgentDescription[] agentsType3  = DFService.search(myAgent,template3); 
 					for(int i=0; i<agentsType3.length; i++){
 						simulationAgents.add(agentsType3[i].getName()); // this is the AID
@@ -113,7 +113,7 @@ public class DayTickerAgent extends Agent{
 				tick.setContent("new day");
 				for(AID id : simulationAgents) {
 					tick.addReceiver(id);
-					System.out.println("Sent Inform");
+					System.out.println("Sent Inform "+ id.getName());
 				}
 				myAgent.send(tick);
 				step++;

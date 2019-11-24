@@ -2,6 +2,8 @@ package coursework;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
@@ -42,13 +44,13 @@ import ontologie.elements.SupplierOrder;
 import ontologie.elements.*;
 
 public class ManufacturerAgent extends Agent{
-	private ArrayList<AID> customers = new ArrayList();
-	private AID supplier = new AID("supplier1 ", AID.ISLOCALNAME);
-	private AID cheapSupplier = new AID("cheap supplier", AID.ISLOCALNAME);
+	private ArrayList<AID> customers = new ArrayList<AID>();
+	private AID supplier /*= new AID("supp lier 1", AID.ISLOCALNAME)*/;
+	private AID cheapSupplier /*= new AID("cheap supplier", AID.ISLOCALNAME)*/;
 	private ArrayList<CustomerOrder> recievedOrders = new ArrayList();
 	private ArrayList<CustomerOrder> acceptedOrders = new ArrayList();
 	
-	private AID tickerAgent= new AID("ticker", AID.ISLOCALNAME);
+	private AID tickerAgent/*= new AID("ticker", AID.ISLOCALNAME)*/;
 	private Codec codec = new SLCodec();
 	private Ontology ontology = Ontologie.getInstance();
 	private final int productionCapacity = 50;
@@ -66,8 +68,8 @@ public class ManufacturerAgent extends Agent{
 	private ArrayList<CustomerOrder> daysCheapOrders = new ArrayList();
 	
 	protected void setup() {
-		System.out.println(supplier.toString());
-		System.out.println(cheapSupplier.toString());
+		//System.out.println(supplier.toString());
+		System.out.println("man test 1");
 		bestOrder = new CustomerOrder();
 		getContentManager().registerLanguage(codec);
 		getContentManager().registerOntology(ontology);
@@ -83,6 +85,7 @@ public class ManufacturerAgent extends Agent{
 		dfd.addServices(sd);
 		try{
 			DFService.register(this, dfd);
+			System.out.println("man test 2");
 		}
 		catch(FIPAException e){
 			e.printStackTrace();
@@ -90,9 +93,32 @@ public class ManufacturerAgent extends Agent{
 		for(int i= 0; i<100; i++) {
 		dailyprod.add(i, 50);
 		}
-		
+		doWait(240000);
+		//addBehaviour(new FindCustomer(this));
 		addBehaviour(new TickerWaiter(this));
-		//addBehaviour(new OrderHandler());
+		System.out.println("man test 3");
+		
+		
+			/*DFAgentDescription sellerTemplate = new DFAgentDescription();
+			ServiceDescription sd1 = new ServiceDescription();
+			sd1.setType("customer");
+			//sd1.setName("coursework");
+			sellerTemplate.addServices(sd1);
+			try{
+				//sellers.clear();
+				DFAgentDescription[] agentsType1  = DFService.search(this,sellerTemplate); 
+				for(int i=0; i<agentsType1.length-1; i++){
+					customers.add(agentsType1[i].getName());
+					
+				}
+			}
+			catch(FIPAException e) {
+				e.printStackTrace();
+			}
+			System.out.println(customers.toString());*/
+		
+		//addBehaviour(new FindSupplier(this));
+		//addBehaviour(new FindCheapSupplier(this));
 	}
 
 
@@ -125,12 +151,19 @@ public class ManufacturerAgent extends Agent{
 				}
 				if(msg.getContent().equals("new day")) {
 					//spawn new sequential behaviour for day's activities
+					System.out.println("man test 4");
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindCustomer(myAgent));
-					//dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
-					//dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
-					doWait(5000);//wait to ensure all orders recieved
+					//System.out.println("man test 5");
+					//System.out.println(customers.get(0).toString());
+					dailyActivity.addSubBehaviour(new FindSupplier(myAgent));
+					//System.out.println("man test 6");
+					//System.out.println(supplier.toString());
+					dailyActivity.addSubBehaviour(new FindCheapSupplier(myAgent));
+					//System.out.println("man test 7");
+					//System.out.println(cheapSupplier.toString());
+					//doWait(5000);//wait to ensure all orders recieved
 					System.out.println("prints before scheduler");
 					dailyActivity.addSubBehaviour(new OrderHandler(myAgent));
 					doWait(5000);
@@ -141,7 +174,7 @@ public class ManufacturerAgent extends Agent{
 					dailyActivity.addSubBehaviour(new GenerateOrderSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new GenerateOrderCheap(myAgent));
 					}
-					doWait(5000);//wait to ensure all orders recieved
+					//doWait(5000);//wait to ensure all orders recieved
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
@@ -168,18 +201,20 @@ public class ManufacturerAgent extends Agent{
 			DFAgentDescription sellerTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("customer");
+			//sd.setName("coursework");
 			sellerTemplate.addServices(sd);
 			try{
 				//sellers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,sellerTemplate); 
-				for(int i=0; i<agentsType1.length-1; i++){
+				for(int i=0; i<agentsType1.length; i++){
 					customers.add(agentsType1[i].getName());
+					//System.out.println(customers.toString());
 				}
 			}
 			catch(FIPAException e) {
 				e.printStackTrace();
 			}
-
+			System.out.println(customers.toString());
 		}
 	}
 	
@@ -195,19 +230,20 @@ public class ManufacturerAgent extends Agent{
 			DFAgentDescription supplierTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("supplier");
+			//sd.setName("coursework");
 			supplierTemplate.addServices(sd);
 			try{
 				//sellers.clear();
-				DFAgentDescription[] agentsType1  = DFService.search(myAgent,supplierTemplate); 
-				for(int i=0; i<agentsType1.length-1; i++){
-					supplier = agentsType1[i].getName();
-					System.out.println(supplier.toString());
+				DFAgentDescription[] agentsType2  = DFService.search(myAgent,supplierTemplate); 
+				for(int i=0; i<agentsType2.length; i++){
+					supplier = agentsType2[i].getName();
+					
 				}
 			}
 			catch(FIPAException e) {
 				e.printStackTrace();
 			}
-
+			System.out.println("find sup " +supplier.getName());
 		}
 	}
 	
@@ -223,19 +259,20 @@ public class ManufacturerAgent extends Agent{
 			DFAgentDescription cheapsupTemplate = new DFAgentDescription();
 			ServiceDescription sd = new ServiceDescription();
 			sd.setType("cheap supplier");
+			//sd.setName("coursework");
 			cheapsupTemplate.addServices(sd);
 			try{
 				//sellers.clear();
 				DFAgentDescription[] agentsType1  = DFService.search(myAgent,cheapsupTemplate); 
-				for(int i=0; i<agentsType1.length-1; i++){
+				for(int i=0; i<agentsType1.length; i++){
 					cheapSupplier = agentsType1[i].getName();
-					System.out.println(cheapSupplier.toString());
+					
 				}
 			}
 			catch(FIPAException e) {
 				e.printStackTrace();
 			}
-
+			System.out.println("cheap find sup " + cheapSupplier.getName());
 		}
 	}
 	
@@ -251,6 +288,10 @@ public class ManufacturerAgent extends Agent{
 			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
 			ACLMessage msg = receive(mt);
 			if(msg != null){
+				/*if(customers == null) {
+					customers.put(0,  msg.getSender());
+					System.out.println(customers.get(0).getName());
+				}*/
 				try {
 					ContentElement ce = null;
 					System.out.println(msg.getContent()); //print out the message content in SL
@@ -303,7 +344,7 @@ public class ManufacturerAgent extends Agent{
 		public boolean done() {
 			if(NumberOfOrders >= customers.size()-1) {
 			return true;}
-			else {return false;}
+			else {return true;}
 		}
 
 	}
@@ -386,6 +427,7 @@ public class ManufacturerAgent extends Agent{
 						recievedOrders.get(i).setNetCost(recievedOrders.get(i).getBattery().getPrice()+recievedOrders.get(i).getScreen().getPrice()+recievedOrders.get(i).getRam().getPrice()+recievedOrders.get(i).getStorage().getPrice());
 						if(recievedOrders.get(i).getNetCost()<recievedOrders.get(i).getUnitPrice()) {
 							recievedOrders.get(i).setAccepted(true);
+							recievedOrders.get(i).setFastTurnAround(true);
 							System.out.println("True but like first case");
 						}
 					}
@@ -601,15 +643,46 @@ public class EndDay extends OneShotBehaviour {
 
 		@Override
 		public void action() {
-			OrderingFinished finisher = new OrderingFinished();
-			finisher.setFinisher("finish");
+			SupplierOrder finisher1 = new SupplierOrder();
+			finisher1.setFinishOrder(true);
+			ACLMessage finish1 = new ACLMessage(ACLMessage.REQUEST);
+			finish1.setLanguage(codec.getName());
+			finish1.setOntology(ontology.getName());
+			finish1.addReceiver(cheapSupplier);
+			Action request1 = new Action();
+			request1.setAction(finisher1);
+			request1.setActor(cheapSupplier);
+			
+			//try {
+			//finish.setContentObject(true);
+			finish1.setConversationId("finished-ordering1");
+			//finish1.addReceiver(cheapSupplier);
+			//finish1.addReceiver(supplier);
+			//finish.setContent("Finish");
+			try {
+				 // Let JADE convert from Java objects to string
+				 getContentManager().fillContent(finish1, request1); //send the wrapper object
+				 
+				 send(finish1);
+				 System.out.println("finisher1 sent");
+				}
+				catch (CodecException ce) {
+				 ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+				 oe.printStackTrace();
+				} 
+			
+			SupplierOrder finisher = new SupplierOrder();
+			finisher.setFinishOrder(true);
 			ACLMessage finish = new ACLMessage(ACLMessage.REQUEST);
 			finish.setLanguage(codec.getName());
 			finish.setOntology(ontology.getName());
-			finish.addReceiver(cheapSupplier);
+			finish.addReceiver(supplier);
 			Action request = new Action();
 			request.setAction(finisher);
-			request.setActor(cheapSupplier);
+			request.setActor(supplier);
+			System.out.println("finisher suplier test: " + supplier.getName());
 			//try {
 			//finish.setContentObject(true);
 			finish.setConversationId("finished-ordering");
@@ -630,35 +703,7 @@ public class EndDay extends OneShotBehaviour {
 				 oe.printStackTrace();
 				} 
 			
-			OrderingFinished finisher1 = new OrderingFinished();
-			finisher1.setFinisher("finish");
-			ACLMessage finish1 = new ACLMessage(ACLMessage.REQUEST);
-			finish1.setLanguage(codec.getName());
-			finish1.setOntology(ontology.getName());
-			finish1.addReceiver(supplier);
-			Action request1 = new Action();
-			request1.setAction(finisher1);
-			request1.setActor(supplier);
-			System.out.println("finisher fuplier test: " + supplier.getName());
-			//try {
-			//finish.setContentObject(true);
-			finish1.setConversationId("finished-ordering1");
-			//finish1.addReceiver(cheapSupplier);
-			//finish1.addReceiver(supplier);
-			//finish.setContent("Finish");
-			try {
-				 // Let JADE convert from Java objects to string
-				 getContentManager().fillContent(finish1, request1); //send the wrapper object
-				 
-				 send(finish1);
-				 System.out.println("finisher1 sent");
-				}
-				catch (CodecException ce) {
-				 ce.printStackTrace();
-				}
-				catch (OntologyException oe) {
-				 oe.printStackTrace();
-				} 
+			
 			
 			//myAgent.send(finish);
 			recievedOrders.clear();
