@@ -11,6 +11,8 @@ public class SupplierOrder implements AgentAction{
 	private Storage storage;
 	private int quantity;
 	private boolean finishOrder = false;
+	private boolean fullfilled = false;
+	private int dueIn;
 	public AID getBuyer() {
 		return buyer;
 	}
@@ -52,6 +54,18 @@ public class SupplierOrder implements AgentAction{
 	}
 	public void setFinishOrder(boolean finishOrder) {
 		this.finishOrder = finishOrder;
+	}
+	public int getDueIn() {
+		return dueIn;
+	}
+	public void setDueIn(int dueIn) {
+		this.dueIn = dueIn;
+	}
+	public boolean isFullfilled() {
+		return fullfilled;
+	}
+	public void setFullfilled(boolean fullfilled) {
+		this.fullfilled = fullfilled;
 	}
 
 }

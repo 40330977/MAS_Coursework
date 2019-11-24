@@ -1,14 +1,14 @@
 package coursework;
 
 public class Warehouse {
-	private int screens5;
-	private int screens7;
-	private int storage64;
-	private int storage256;
-	private int ram4;
-	private int ram8;
-	private int battery2000;
-	private int battery3000;
+	private int screens5=0;
+	private int screens7=0;
+	private int storage64=0;
+	private int storage256=0;
+	private int ram4=0;
+	private int ram8=0;
+	private int battery2000=0;
+	private int battery3000=0;
 	private int unitStorageCost = 5;
 	
 	public int getScreens5() {

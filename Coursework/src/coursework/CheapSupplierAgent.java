@@ -40,6 +40,7 @@ public class CheapSupplierAgent extends Agent{
 	private Ontology ontology = Ontologie.getInstance();
 	private ArrayList<SupplierOrder> recievedOrders = new ArrayList();
 	private boolean orderReciever = false;
+	private int day = 1;
 
 	@Override
 	protected void setup() {
@@ -97,7 +98,7 @@ public class CheapSupplierAgent extends Agent{
 					//spawn new sequential behaviour for day's activities
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
-					//dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
+					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
 					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new OrderHandler());
@@ -203,6 +204,47 @@ public class CheapSupplierAgent extends Agent{
 
 	}
 	
+	public class FulfillOrder extends OneShotBehaviour{
+		public FulfillOrder(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			for(SupplierOrder order : recievedOrders) {
+				if(order.getDueIn() == day) {
+					order.setFullfilled(true);
+					ACLMessage enquiry = new ACLMessage(ACLMessage.REQUEST);
+					enquiry.setLanguage(codec.getName());
+					enquiry.setOntology(ontology.getName());
+					enquiry.addReceiver(manufacturer);
+					
+					/*SupOrderAct order1 = new SupOrderAct();
+					order1.setBuyer(myAgent.getAID());
+					order1.setItem(order);*/
+					
+					Action request = new Action();
+					request.setAction(order);
+					request.setActor(manufacturer); // the agent that you request to perform the action
+					try {
+					 // Let JADE convert from Java objects to string
+					 getContentManager().fillContent(enquiry, request); //send the wrapper object
+					 
+					 send(enquiry);
+					 System.out.println("Order Returned");
+					}
+					catch (CodecException ce) {
+					 ce.printStackTrace();
+					}
+					catch (OntologyException oe) {
+					 oe.printStackTrace();
+					} 
+				}
+			}
+				
+		}
+	}
+	
 public class EndDay extends OneShotBehaviour {
 		
 		public EndDay(Agent a) {
@@ -211,11 +253,15 @@ public class EndDay extends OneShotBehaviour {
 
 		@Override
 		public void action() {
+			
+			
+		
 			orderReciever = false;
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(tickerAgent);
 			msg.setContent("done");
 			myAgent.send(msg);
+			day++;
 			//send a message to each seller that we have finished
 			//ACLMessage sellerDone = new ACLMessage(ACLMessage.INFORM);
 			//sellerDone.setContent("done");

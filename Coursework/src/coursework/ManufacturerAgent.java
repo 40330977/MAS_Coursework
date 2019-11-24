@@ -57,7 +57,7 @@ public class ManufacturerAgent extends Agent{
 	private ArrayList<Integer> dailyprod = new ArrayList();//day, prod quota used
 	public Warehouse warehouse = new Warehouse();
 	private int OrderQuantity = 0;
-	private int day = 0;
+	private int day = 1;
 	private int orderNo = 0;
 	private HashMap<CustomerOrder, Integer> orderSchedule = new HashMap();
 	private HashMap<CustomerOrder, Integer> orderScheduleCheap = new HashMap();
@@ -547,6 +547,7 @@ public class ManufacturerAgent extends Agent{
 			}
 
 			order.setQuantity(Cust.getQuantity());
+			order.setDueIn(day+1);
 			//order.setBuyer(Cust.getBuyer());
 			
 			
@@ -602,6 +603,7 @@ public class ManufacturerAgent extends Agent{
 			order.getStorage().setStorageSize(Cust.getStorage().getStorageSize());
 	
 			order.setQuantity(Cust.getQuantity());
+			order.setDueIn(day+4);
 			
 			//order.setBuyer(Cust.getBuyer());
 			
@@ -633,6 +635,65 @@ public class ManufacturerAgent extends Agent{
 			} 
 			}
 		}}
+	}
+	public class recieveSupplies extends Behaviour{
+		Integer NumberOfOrders = 0;
+		public recieveSupplies(Agent a) {
+			super(a);
+		}
+
+		@Override
+		public void action() {
+			//recievedOrders.clear();
+			//This behaviour should only respond to REQUEST messages
+			MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST); 
+			ACLMessage msg = receive(mt);
+			if(msg != null){
+				/*if(customers == null) {
+					customers.put(0,  msg.getSender());
+					System.out.println(customers.get(0).getName());
+				}*/
+				try {
+					ContentElement ce = null;
+					System.out.println(msg.getContent()); //print out the message content in SL
+
+					// Let JADE convert from String to Java objects
+					// Output will be a ContentElement
+					ce = getContentManager().extractContent(msg);
+					System.out.println(ce);
+					if(ce instanceof Action) {
+						Concept action = ((Action)ce).getAction();
+						if (action instanceof SupplierOrder) {
+							SupplierOrder order = (SupplierOrder)action;
+							//CustomerOrder cust = order.getItem();
+							//OrderQuantity = order.getQuantity();
+							System.out.println("test: " + order.getQuantity()+" " + order.getDueIn());
+							//recievedOrders.add(order);
+							NumberOfOrders++;
+							//update warehouse stock: check for nulls then if else for incrementing stock by type
+							
+						}
+
+					}
+				}
+
+				catch (CodecException ce) {
+					ce.printStackTrace();
+				}
+				catch (OntologyException oe) {
+					oe.printStackTrace();
+				}
+
+			}
+			else{
+				block();
+			}
+		}
+
+		@Override
+		public boolean done() {
+			return false;
+		}
 	}
 	
 public class EndDay extends OneShotBehaviour {
