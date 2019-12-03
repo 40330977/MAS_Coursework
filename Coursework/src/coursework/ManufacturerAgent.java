@@ -174,6 +174,7 @@ public class ManufacturerAgent extends Agent{
 					dailyActivity.addSubBehaviour(new GenerateOrderSupplier(myAgent));
 					dailyActivity.addSubBehaviour(new GenerateOrderCheap(myAgent));
 					}
+					//dailyActivity.addSubBehaviour(new recieveSupplies(myAgent));
 					//doWait(5000);//wait to ensure all orders recieved
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
@@ -344,7 +345,7 @@ public class ManufacturerAgent extends Agent{
 		public boolean done() {
 			if(NumberOfOrders >= customers.size()-1) {
 			return true;}
-			else {return true;}
+			else {return false;}
 		}
 
 	}
@@ -503,11 +504,13 @@ public class ManufacturerAgent extends Agent{
 					System.out.println("Sending expensive");
 					//myAgent.addBehaviour(new GenerateOrderSupplier(myAgent, order));
 					daysOrders.add(order);
+					System.out.println(order.toString());
 				}
 				if(orderScheduleCheap.get(order) != null && orderScheduleCheap.get(order) == day) {
 					System.out.println("Sending cheap");
 					//myAgent.addBehaviour(new GenerateOrderCheap(myAgent, order));
-					daysCheapOrders.add(order);
+					daysCheapOrders.add(order);//test this
+					System.out.println(order.toString());
 				}
 			}
 			
@@ -527,7 +530,7 @@ public class ManufacturerAgent extends Agent{
 		public void action() {
 			if(daysOrders!=null) {
 			for(CustomerOrder Cust : daysOrders) {
-			SupplierOrder order = new SupplierOrder();
+			SupplierOrder order = new SupplierOrder();//fast turn around if else needed here
 			order.setScreen(new Screen());
 			order.setBattery(new Battery());
 			order.setRam(new RAM());
@@ -597,7 +600,8 @@ public class ManufacturerAgent extends Agent{
 			//System.out.println("cheap order pass check: " + Cust.getRam().getRAMSize());
 			order.setRam(new RAM());
 			order.setStorage(new Storage());
-
+			System.out.println(daysCheapOrders.isEmpty());
+			System.out.println(Cust.getRam());
 			order.getRam().setRAMSize(Cust.getRam().getRAMSize());
 			
 			order.getStorage().setStorageSize(Cust.getStorage().getStorageSize());
@@ -692,7 +696,7 @@ public class ManufacturerAgent extends Agent{
 
 		@Override
 		public boolean done() {
-			return false;
+			return true;
 		}
 	}
 	

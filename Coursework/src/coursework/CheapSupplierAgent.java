@@ -99,10 +99,11 @@ public class CheapSupplierAgent extends Agent{
 					SequentialBehaviour dailyActivity = new SequentialBehaviour();
 					//sub-behaviours will execute in the order they are added
 					dailyActivity.addSubBehaviour(new FindManufacturer(myAgent));
-					//dailyActivity.addSubBehaviour(new SendEnquiries(myAgent));
+					
 					//dailyActivity.addSubBehaviour(new CollectOffers(myAgent));
 					dailyActivity.addSubBehaviour(new OrderHandler());
 					doWait(5000);
+					//dailyActivity.addSubBehaviour(new FulfillOrder(myAgent));
 					dailyActivity.addSubBehaviour(new EndDay(myAgent));
 					myAgent.addBehaviour(dailyActivity);
 				}
